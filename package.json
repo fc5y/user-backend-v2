@@ -1,0 +1,35 @@
+{
+  "name": "user-backend-v2",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "repository": "git@github.com:fc5y/user-backend-v2.git",
+  "author": "Kien Nguyen <kc97ble@gmail.com>",
+  "contributors": [],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "serve": "node dist/index.js",
+    "dev": "node-dev src/index.ts",
+    "lint-check": "prettier --config .prettierrc.json 'src/**/*.ts' --check",
+    "lint-fix": "prettier --config .prettierrc.json 'src/**/*.ts' --write"
+  },
+  "precommit": {
+    "run": [
+      "lint-check"
+    ]
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^9.0.2",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.10",
+    "@types/express": "^4.17.11",
+    "node-dev": "^7.0.0",
+    "pre-commit": "^1.2.2",
+    "prettier": "^2.3.0",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
+  }
+}
