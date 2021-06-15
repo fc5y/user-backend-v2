@@ -1,5 +1,5 @@
 import Ajv, { JSONSchemaType, ValidateFunction } from 'ajv';
-import { JsonSchemaValidationError } from '../common-errors';
+import { ERROR_CODE, GeneralError } from '../common-errors';
 
 const ajv = new Ajv({ coerceTypes: true, allowUnionTypes: true });
 
@@ -22,7 +22,14 @@ export function assertWithSchema<T>(
   if (validate(result)) {
     return result;
   } else {
-    throw new JsonSchemaValidationError(ajv.errorsText(validate.errors), validate.errors);
+    throw new GeneralError({
+      error: ERROR_CODE.JSON_SCHEMA_VALIDATION_FAILED,
+      error_msg: 'JSON schema validation failed',
+      data: {
+        message: ajv.errorsText(validate.errors),
+        errors: validate.errors,
+      },
+    });
   }
 }
 

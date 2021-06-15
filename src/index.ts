@@ -3,7 +3,7 @@ import cors from 'cors';
 import v2 from './v2';
 
 const app = express();
-const port = process.env.PORT || 9000;
+const port = process.env.PORT || 8013;
 
 app.set('json spaces', 2);
 app.use(cors());
@@ -17,6 +17,8 @@ app.get('/', (_req: express.Request, res: express.Response) => {
 });
 
 app.use('/api/v2', v2);
+
+// TODO: handle error 404
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);

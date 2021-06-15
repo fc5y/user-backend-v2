@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { getCurrentTimestamp } from './utils';
-import routeContest from './routes/contest';
-import { JsonSchemaValidationError } from './utils/common-errors';
+import { getCurrentTimestamp } from './utils/common-utils';
+import routeContest from './routes/contests';
+import { ERROR_CODE, GeneralError, JsonSchemaValidationError } from './utils/common-errors';
 
 const router = Router();
 
-router.get('/', (req: Request, res: Response) => {
+router.get('/', (_req: Request, res: Response) => {
   res.json({
     error: 0,
     error_msg: '',
@@ -37,22 +37,28 @@ router.get('/timestamp', (req: Request, res: Response) => {
 
 router.use('/contests', routeContest);
 
-router.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
-  console.error(error); // TODO: use a proper logger
-  if (error instanceof JsonSchemaValidationError) {
+router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  console.error(err); // TODO: use a proper logger
+  if (err instanceof GeneralError) {
     res.status(400).json({
-      error: -1, // TODO: use a correct error code,
-      error_msg: error.name,
+      error: err.error,
+      error_msg: err.error_msg,
+      data: err.data,
+    });
+  } else if (err instanceof JsonSchemaValidationError) {
+    res.status(400).json({
+      error: ERROR_CODE.JSON_SCHEMA_VALIDATION_FAILED,
+      error_msg: err.name,
       data: {
-        message: error.message,
-        errors: error.errors,
+        message: err.message,
+        errors: err.errors,
       },
     });
   } else {
     res.status(500).json({
-      error: -1, // TODO: use a correct error code
-      error_msg: 'Server error',
-      data: error.toString(),
+      error: ERROR_CODE.UNKNOWN_ERROR, // TODO: use a correct error code
+      error_msg: 'Unknown error',
+      data: err.toString(),
     });
   }
 });
