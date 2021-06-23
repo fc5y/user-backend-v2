@@ -17,8 +17,10 @@ export type GetContestsData = {
     contest_title: string;
     duration: number;
     can_enter: boolean;
-    start_time: number | string;
+    start_time: number;
     materials: string;
+    created_at: number;
+    updated_at: number;
   }>;
 };
 
@@ -31,32 +33,33 @@ const getContestsDataSchema: JSONSchemaType<GetContestsData> = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['id', 'contest_name', 'duration'],
+        required: ['id', 'contest_name', 'contest_title', 'duration', 'can_enter', 'start_time', 'materials'],
         properties: {
           id: { type: 'number' },
           can_enter: { type: 'boolean' },
           contest_name: { type: 'string' },
           contest_title: { type: 'string' },
           duration: { type: 'number' },
-          start_time: { type: ['number', 'string'] },
+          start_time: { type: 'number' },
           materials: { type: 'string' },
-          // TODO: complete this
+          created_at: { type: 'number' },
+          updated_at: { type: 'number' },
         },
       },
     },
   },
 };
 
-export async function getContests(params: GetContestsParams): Promise<ApiResponse<GetContestsData>> {
+export async function getContests({ offset, limit }: GetContestsParams) {
   const url = getUrl({
     origin: 'https://test.be.freecontest.net', // TODO: read from process.env
-    pathname: '/db/v2/contests',
-    query: {
-      offset: params.offset,
-      limit: params.limit,
-    },
+    pathname: '/db/v2/contests/read',
   });
-  const { error, error_msg, data } = await fetchApi({ url, method: 'GET' });
+  const { error, error_msg, data } = await fetchApi({
+    method: 'POST',
+    url,
+    body: { offset, limit },
+  });
   const validatedData = !error && data != null ? assertWithSchema(data, getContestsDataSchema) : undefined;
   return { error, error_msg, data: validatedData };
 }
