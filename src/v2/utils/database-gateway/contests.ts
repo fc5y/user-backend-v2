@@ -10,7 +10,7 @@ export type GetContestsParams = {
 };
 
 export type GetContestsData = {
-  total: number;
+  total?: number;
   items: Array<{
     id: number;
     contest_name: string;
@@ -26,7 +26,7 @@ const getContestsDataSchema: JSONSchemaType<GetContestsData> = {
   type: 'object',
   required: ['items'],
   properties: {
-    total: { type: 'number' },
+    total: { type: 'number', nullable: true },
     items: {
       type: 'array',
       items: {
