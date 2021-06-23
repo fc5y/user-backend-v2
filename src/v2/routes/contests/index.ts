@@ -1,6 +1,6 @@
 import db from '../../utils/database-gateway';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
-import { formatDateTime, formatMaterials } from './utils';
+import { formatDateTime, formatMaterials, getTotalPartitipationsInContest } from './utils';
 import { NextFunction, Request, Response, Router } from 'express';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 
@@ -35,15 +35,17 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'Contests',
       data: {
-        contests: data.items.map((contest) => ({
-          can_enter: contest.can_enter,
-          name: contest.contest_name,
-          title: contest.contest_title,
-          duration: contest.duration,
-          start_time: formatDateTime(contest.start_time),
-          total_participations: -1, // TODO: fix this
-          materials: formatMaterials(contest.materials),
-        })),
+        contests: await Promise.all(
+          data.items.map(async (contest) => ({
+            can_enter: contest.can_enter,
+            name: contest.contest_name,
+            title: contest.contest_title,
+            duration: contest.duration,
+            start_time: formatDateTime(contest.start_time),
+            total_participations: await getTotalPartitipationsInContest(contest.id), // TODO: fix this
+            materials: formatMaterials(contest.materials),
+          })),
+        ),
       },
     };
     res.json(result);
