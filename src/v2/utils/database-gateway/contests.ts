@@ -24,7 +24,7 @@ export type GetContestsData = {
 
 const getContestsDataSchema: JSONSchemaType<GetContestsData> = {
   type: 'object',
-  required: ['total', 'items'],
+  required: ['items'],
   properties: {
     total: { type: 'number' },
     items: {
