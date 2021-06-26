@@ -1,7 +1,7 @@
-import { assertWithSchema } from '../validation';
+import { assertWithSchema, JSONSchemaType } from '../validation';
+import { DATABASE_GATEWAY_ORIGIN } from '../common-config';
 import { fetchApi } from '../fetch-utils';
 import { getUrl } from '../get-url';
-import { JSONSchemaType } from 'ajv';
 
 export type GetParticipationsParams = {
   contest_id: number;
@@ -26,7 +26,7 @@ const getParticipationsDataSchema: JSONSchemaType<GetParticipationsData> = {
 
 export async function getParticipations({ contest_id, offset, limit, has_total }: GetParticipationsParams) {
   const url = getUrl({
-    origin: 'https://test.be.freecontest.net', // TODO: read from process.env
+    origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/participations/read',
   });
   const { error, error_msg, data } = await fetchApi({

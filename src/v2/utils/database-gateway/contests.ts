@@ -1,6 +1,7 @@
-import { getUrl } from '../get-url';
 import { ApiResponse, fetchApi } from '../fetch-utils';
 import { assertWithSchema, JSONSchemaType } from '../validation';
+import { DATABASE_GATEWAY_ORIGIN } from '../common-config';
+import { getUrl } from '../get-url';
 
 // #region GET /db/v2/contests
 
@@ -52,7 +53,7 @@ const getContestsDataSchema: JSONSchemaType<GetContestsData> = {
 
 export async function getContests({ offset, limit }: GetContestsParams) {
   const url = getUrl({
-    origin: 'https://test.be.freecontest.net', // TODO: read from process.env
+    origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/contests/read',
   });
   const { error, error_msg, data } = await fetchApi({
@@ -80,7 +81,7 @@ type CreateContestsData = undefined;
 
 export async function createContests(params: CreateContestsParams): Promise<ApiResponse<CreateContestsData>> {
   const url = getUrl({
-    origin: 'https://test.be.freecontest.net', // TODO: read from process.env
+    origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/contests/create',
   });
   const { error, error_msg } = await fetchApi({
