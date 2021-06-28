@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { getCurrentTimestamp } from './utils/common-utils';
 import routeContest from './routes/contests';
 import { ERROR_CODE, GeneralError } from './utils/common-errors';
+import routeUser from './routes/users';
 
 const router = Router();
 
@@ -46,6 +47,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
     }),
   );
 });
+router.use('/users', routeUser);
 
 router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err); // TODO: use a proper logger
