@@ -1,8 +1,9 @@
 import db from '../../utils/database-gateway';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
-import { formatDateTime, formatMaterials, getTotalPartitipationsInContest } from './utils';
-import { NextFunction, Request, Response, Router } from 'express';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
+import { formatDateTime, formatMaterials, getTotalPartitipationsInContest } from './utils';
+import { mustBeAdmin } from '../../utils/role-verification';
+import { NextFunction, Request, Response, Router } from 'express';
 
 // #region GET /api/v2/contests
 
@@ -102,6 +103,6 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
 
 const router = Router(); // /api/v2/contests
 router.get('/', getAllContests);
-router.post('/create', createContest);
+router.post('/create', mustBeAdmin, createContest);
 
 export default router;
