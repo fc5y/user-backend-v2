@@ -59,7 +59,7 @@ export async function getContests({ offset, limit }: GetContestsParams) {
   const { error, error_msg, data } = await fetchApi({
     method: 'POST',
     url,
-    body: { offset, limit },
+    body: { offset, limit, order_by: [{ column: 'start_time', order: 'desc' }] },
   });
   const validatedData = !error && data != null ? assertWithSchema(data, getContestsDataSchema) : undefined;
   return { error, error_msg, data: validatedData };
