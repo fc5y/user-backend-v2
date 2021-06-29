@@ -84,7 +84,7 @@ export async function createContests(params: CreateContestsParams): Promise<ApiR
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/contests/create',
   });
-  const { error, error_msg } = await fetchApi({
+  const { error, error_msg, data } = await fetchApi({
     url,
     method: 'POST',
     body: {
@@ -94,10 +94,11 @@ export async function createContests(params: CreateContestsParams): Promise<ApiR
         start_time: params.start_time,
         duration: params.duration,
         can_enter: params.can_enter,
+        materials: '{}', // TODO: allow this to be fetched from params
       },
     },
   });
-  return { error, error_msg };
+  return { error, error_msg, data };
 }
 
 // #endregion

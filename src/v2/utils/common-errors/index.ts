@@ -5,22 +5,9 @@ export const ERROR_CODE = {
   JSON_SCHEMA_VALIDATION_FAILED: 500120,
   DATABASE_GATEWAY_ERROR: 500125,
   ROLE_MUST_BE_ADMIN: 500256,
+  ROUTE_NOT_FOUND: 500349,
   UNKNOWN_ERROR: 599999,
 };
-
-/**
- * @deprecated Use GeneralError instead
- * TODO: remove this
- */
-export class JsonSchemaValidationError extends Error {
-  errors: ErrorObject[] | null | undefined;
-
-  constructor(message: string, errors: ErrorObject[] | null | undefined) {
-    super(message);
-    this.errors = errors;
-    this.name = 'JsonSchemaValidationError';
-  }
-}
 
 export class GeneralError extends Error {
   error: number;
