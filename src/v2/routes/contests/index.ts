@@ -43,7 +43,7 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
             title: contest.contest_title,
             duration: contest.duration,
             start_time: formatDateTime(contest.start_time),
-            total_participations: await getTotalPartitipationsInContest(contest.id), // TODO: fix this
+            total_participations: await getTotalPartitipationsInContest(contest.id),
             materials: formatMaterials(contest.materials),
           })),
         ),
@@ -82,12 +82,18 @@ const createContestParamsSchema: JSONSchemaType<CreateContestParams> = {
 async function createContest(req: Request, res: Response, next: NextFunction) {
   try {
     const { name, title, start_time, duration, can_enter } = assertWithSchema(req.body, createContestParamsSchema);
-    const { error, error_msg } = await db.contests.createContests({ name, title, start_time, duration, can_enter });
+    const { error, error_msg, data } = await db.contests.createContests({
+      name,
+      title,
+      start_time,
+      duration,
+      can_enter,
+    });
     if (error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
         error_msg: 'Received non-zero code from Database Gateway when creating contest',
-        data: { response: { error, error_msg } },
+        data: { response: { error, error_msg, data } },
       });
     }
     res.json({

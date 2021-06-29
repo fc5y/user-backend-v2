@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { getCurrentTimestamp } from './utils/common-utils';
 import routeContest from './routes/contests';
-import { ERROR_CODE, GeneralError, JsonSchemaValidationError } from './utils/common-errors';
+import { ERROR_CODE, GeneralError } from './utils/common-errors';
 
 const router = Router();
 
@@ -37,6 +37,16 @@ router.get('/timestamp', (req: Request, res: Response) => {
 
 router.use('/contests', routeContest);
 
+router.use((req: Request, res: Response, next: NextFunction) => {
+  next(
+    new GeneralError({
+      error: ERROR_CODE.ROUTE_NOT_FOUND,
+      error_msg: 'You are sending a request to an undefined route.',
+      data: { url: req.url },
+    }),
+  );
+});
+
 router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err); // TODO: use a proper logger
   if (err instanceof GeneralError) {
@@ -44,15 +54,6 @@ router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
       error: err.error,
       error_msg: err.error_msg,
       data: err.data,
-    });
-  } else if (err instanceof JsonSchemaValidationError) {
-    res.status(400).json({
-      error: ERROR_CODE.JSON_SCHEMA_VALIDATION_FAILED,
-      error_msg: err.name,
-      data: {
-        message: err.message,
-        errors: err.errors,
-      },
     });
   } else {
     res.status(500).json({

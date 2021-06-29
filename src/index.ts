@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import v2 from './v2';
 
@@ -18,7 +18,22 @@ app.get('/', (_req: express.Request, res: express.Response) => {
 
 app.use('/api/v2', v2);
 
-// TODO: handle error 404
+app.use((_req: Request, res: Response, _next: NextFunction) => {
+  res.status(404).json({
+    error: 404,
+    error_msg: 'Route not found',
+    data: null,
+  });
+});
+
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err); // TODO: use a proper logger
+  res.status(500).json({
+    error: 500,
+    error_msg: 'Server error',
+    data: err,
+  });
+});
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
