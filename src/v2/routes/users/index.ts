@@ -22,7 +22,7 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
     const { username } = assertWithSchema(req.params, getUserParamsSchema);
     const { error, error_msg, data } = await db.users.getUsers({
       offset: 0,
-      limit: 100000,
+      limit: 1,
       username,
     });
     if (error || !data) {
@@ -32,19 +32,23 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
         data: { response: { error, error_msg, data } },
       });
     }
+    if (data.items.length === 0) {
+      throw new GeneralError({
+        error: ERROR_CODE.USER_NOT_FOUND,
+        error_msg: 'Cannot find any user who matches the given username',
+        data: { response: { error, error_msg, data } },
+      });
+    }
     const result = {
       error: 0,
       error_msg: 'User',
       data: {
-        user:
-          data.items.length === 0
-            ? {}
-            : {
-                username: data.items[0].username,
-                full_name: data.items[0].full_name,
-                school_name: data.items[0].school_name,
-                rating: data.items[0].rating === undefined ? null : data.items[0].rating,
-              },
+        user: {
+          username: data.items[0].username,
+          full_name: data.items[0].full_name,
+          school_name: data.items[0].school_name,
+          rating: data.items[0].rating === undefined ? null : data.items[0].rating,
+        },
       },
     };
     res.json(result);
