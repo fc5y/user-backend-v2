@@ -37,6 +37,7 @@ router.get('/timestamp', (req: Request, res: Response) => {
 });
 
 router.use('/contests', routeContest);
+router.use('/users', routeUser);
 
 router.use((req: Request, res: Response, next: NextFunction) => {
   next(
@@ -47,7 +48,6 @@ router.use((req: Request, res: Response, next: NextFunction) => {
     }),
   );
 });
-router.use('/users', routeUser);
 
 router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err); // TODO: use a proper logger
