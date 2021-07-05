@@ -3,6 +3,7 @@ import { getCurrentTimestamp } from './utils/common-utils';
 import routeContest from './routes/contests';
 import { ERROR_CODE, GeneralError } from './utils/common-errors';
 import routeUser from './routes/users';
+import logger from './utils/logger';
 
 const router = Router();
 
@@ -50,7 +51,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 router.use('/users', routeUser);
 
 router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-  console.error(err); // TODO: use a proper logger
+  logger.error(err);
   if (err instanceof GeneralError) {
     res.status(400).json({
       error: err.error,

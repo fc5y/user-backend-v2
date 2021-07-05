@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import v2 from './v2';
+import logger from './v2/utils/logger';
 
 const app = express();
 const port = process.env.PORT || 8013;
@@ -27,7 +28,7 @@ app.use((_req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err); // TODO: use a proper logger
+  logger.error(err);
   res.status(500).json({
     error: 500,
     error_msg: 'Server error',
@@ -36,5 +37,5 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.listen(port, () => {
-  console.log(`Listening on port ${port}`);
+  logger.info(`Listening on port ${port}`);
 });
