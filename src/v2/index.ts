@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { getCurrentTimestamp } from './utils/common-utils';
 import routeContest from './routes/contests';
 import { ERROR_CODE, GeneralError } from './utils/common-errors';
+import routeAnnouncement from './routes/announcements';
 import routeUser from './routes/users';
 import logger from './utils/logger';
 
@@ -38,6 +39,7 @@ router.get('/timestamp', (req: Request, res: Response) => {
 });
 
 router.use('/contests', routeContest);
+router.use('/announcements', routeAnnouncement);
 router.use('/users', routeUser);
 
 router.use((req: Request, res: Response, next: NextFunction) => {
