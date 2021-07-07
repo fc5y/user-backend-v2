@@ -8,6 +8,7 @@ import { getUrl } from '../get-url';
 export type GetAnnouncementsParams = {
   offset: number;
   limit: number;
+  announcement_name?: string;
 };
 
 export type GetAnnouncementsData = {
@@ -52,7 +53,7 @@ const getAnnouncementsDataSchema: JSONSchemaType<GetAnnouncementsData> = {
   },
 };
 
-export async function getAnnouncements({ offset, limit }: GetAnnouncementsParams) {
+export async function getAnnouncements({ offset, limit, announcement_name }: GetAnnouncementsParams) {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/announcements/read',
@@ -60,7 +61,13 @@ export async function getAnnouncements({ offset, limit }: GetAnnouncementsParams
   const { error, error_msg, data } = await fetchApi({
     method: 'POST',
     url,
-    body: { offset, limit },
+    body: {
+      offset,
+      limit,
+      where: {
+        announcement_name,
+      },
+    },
   });
   const validateData = !error && data != null ? assertWithSchema(data, getAnnouncementsDataSchema) : undefined;
   return { error, error_msg, data: validateData };
@@ -78,7 +85,9 @@ export type createAnnouncementsParams = {
 
 type createAnnouncementsData = undefined;
 
-export async function createAnnouncements(params: createAnnouncementsParams): Promise<ApiResponse<createAnnouncementsData>> {
+export async function createAnnouncements(
+  params: createAnnouncementsParams,
+): Promise<ApiResponse<createAnnouncementsData>> {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/annnouncements/create',
