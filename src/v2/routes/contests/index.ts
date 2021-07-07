@@ -1,7 +1,8 @@
 import db from '../../utils/database-gateway';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import { formatDateTime, formatMaterials, getTotalPartitipationsInContest } from './utils';
+import { formatDateTime, formatMaterials } from './utils';
+import { getTotalContests, getTotalPartitipationsInContest } from '../../utils/cached-requests';
 import { mustBeAdmin } from '../../utils/role-verification';
 import { NextFunction, Request, Response, Router } from 'express';
 
@@ -36,6 +37,7 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'Contests',
       data: {
+        total: await getTotalContests(),
         contests: await Promise.all(
           data.items.map(async (contest) => ({
             can_enter: contest.can_enter,
