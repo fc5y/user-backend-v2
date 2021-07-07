@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import logger from '../logger';
 import { assertWithSchema, JSONSchemaType } from '../validation';
 
 export type ApiResponse<T = any> = {
@@ -23,8 +24,8 @@ const DEFAULT_HEADERS = {
  * TODO: remove this export
  */
 export async function http(params: Params) {
-  console.log(`Fetching ${params.url}`); // TODO: use a proper logger
-  if (params.body != null) console.log(params.body); // TODO: use a proper logger
+  logger.info(`Fetching ${params.url}`);
+  if (params.body != null) logger.info(params.body);
   const response = await fetch(params.url, {
     method: params.method,
     headers: { ...DEFAULT_HEADERS, ...(params.headers || {}) },
@@ -44,8 +45,8 @@ const apiResponseSchema: JSONSchemaType<ApiResponse> = {
 };
 
 export async function fetchApi(params: Params): Promise<ApiResponse> {
-  console.log(`Fetching ${params.url}`); // TODO: use a proper logger
-  if (params.body != null) console.log(params.body); // TODO: use a proper logger
+  logger.info(`Fetching ${params.url}`);
+  if (params.body != null) logger.info(params.body);
   const response = await fetch(params.url, {
     method: params.method,
     headers: { ...DEFAULT_HEADERS, ...(params.headers || {}) },
