@@ -1,9 +1,8 @@
 import db from '../../utils/database-gateway';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
-import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import { mustBeAdmin } from '../../utils/role-verification';
+import { DatabaseGatewayError } from '../../utils/common-errors';
 import { NextFunction, Request, Response, Router } from 'express';
-import { getContestNameAndTitleById, getUsernameById } from './utils';
+import { getContestById, getUsernameById } from './utils';
 
 const user_id = 20000; // TODO: fix later
 
@@ -33,12 +32,9 @@ async function getMyParticipations(req: Request, res: Response, next: NextFuncti
       limit,
     });
     if (error || !data) {
-      throw new GeneralError({
-        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching participations',
-        data: { response: { error, error_msg, data } },
-      });
+      throw new DatabaseGatewayError({ error, error_msg, data });
     }
+    const username = await getUsernameById(user_id);
     const result = {
       error: 0,
       error_msg: 'My participations',
@@ -46,9 +42,9 @@ async function getMyParticipations(req: Request, res: Response, next: NextFuncti
         total: data.total,
         participations: await Promise.all(
           data.items.map(async (participation) => {
-            const contestInfo = await getContestNameAndTitleById(participation.contest_id);
+            const contestInfo = await getContestById(participation.contest_id);
             return {
-              username: await getUsernameById(participation.user_id),
+              username,
               contest_name: contestInfo.contest_name,
               contest_title: contestInfo.contest_title,
               is_hidden: participation.is_hidden,
