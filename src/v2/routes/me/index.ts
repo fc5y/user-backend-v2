@@ -3,14 +3,9 @@ import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { mustBeAdmin } from '../../utils/role-verification';
 import { NextFunction, Request, Response, Router } from 'express';
-import { getUsernameById } from '../../utils/cached-requests';
-import { getContestNameById, getContestTitleById } from './utils';
+import { getContestNameAndTitleById, getUsernameById } from './utils';
 
 const user_id = 20000; // TODO: fix later
-
-//#region GET /api/v2/me
-
-//#endregion
 
 //#region  GET /api/v2/users/me/participations
 
@@ -50,16 +45,19 @@ async function getMyParticipations(req: Request, res: Response, next: NextFuncti
       data: {
         total: data.total,
         participations: await Promise.all(
-          data.items.map(async (participation) => ({
-            username: await getUsernameById(participation.user_id),
-            contest_name: await getContestNameById(participation.contest_id),
-            contest_title: await getContestTitleById(participation.contest_id),
-            is_hidden: participation.is_hidden,
-            rating: participation.rating,
-            rating_change: participation.rating_change,
-            score: participation.score,
-            contest_rank: participation.rank_in_contest,
-          })),
+          data.items.map(async (participation) => {
+            const contestInfo = await getContestNameAndTitleById(participation.contest_id);
+            return {
+              username: await getUsernameById(participation.user_id),
+              contest_name: contestInfo.contest_name,
+              contest_title: contestInfo.contest_title,
+              is_hidden: participation.is_hidden,
+              rating: participation.rating,
+              rating_change: participation.rating_change,
+              score: participation.score,
+              contest_rank: participation.rank_in_contest,
+            };
+          }),
         ),
       },
     };
