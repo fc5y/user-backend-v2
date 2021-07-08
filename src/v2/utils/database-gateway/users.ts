@@ -14,6 +14,7 @@ export type GetUsersParams = {
 export type GetUsersData = {
   total?: number;
   items: Array<{
+    id: number;
     username: string;
     full_name: string;
     school_name: string;
@@ -30,8 +31,9 @@ const getUsersDataSchema: JSONSchemaType<GetUsersData> = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['username', 'full_name', 'school_name'],
+        required: ['id', 'username', 'full_name', 'school_name'],
         properties: {
+          id: { type: 'number' },
           username: { type: 'string' },
           full_name: { type: 'string' },
           school_name: { type: 'string' },
