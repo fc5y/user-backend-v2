@@ -4,7 +4,8 @@ import { fetchApi } from '../fetch-utils';
 import { getUrl } from '../get-url';
 
 export type GetParticipationsParams = {
-  contest_id: number;
+  user_id?: number;
+  contest_id?: number;
   limit: number;
   offset: number;
   has_total: boolean;
@@ -12,7 +13,17 @@ export type GetParticipationsParams = {
 
 export type GetParticipationsData = {
   total?: number;
-  items: Array<Object>; // TODO: make the type more specific
+  items: Array<{
+    user_id: number;
+    contest_id: number;
+    rank_in_contest: number;
+    rating: number;
+    rating_change: number;
+    score: number;
+    is_hidden: boolean;
+    contest_password: string;
+    synced: boolean;
+  }>; // TODO: make the type more specific
 };
 
 const getParticipationsDataSchema: JSONSchemaType<GetParticipationsData> = {
@@ -20,7 +31,34 @@ const getParticipationsDataSchema: JSONSchemaType<GetParticipationsData> = {
   required: ['items'],
   properties: {
     total: { type: 'number', nullable: true },
-    items: { type: 'array', items: { type: 'object', required: [] } },
+    items: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: [
+          'user_id',
+          'contest_id',
+          'rank_in_contest',
+          'rating',
+          'rating_change',
+          'score',
+          'is_hidden',
+          'contest_password',
+          'synced',
+        ],
+        properties: {
+          user_id: { type: 'integer' },
+          contest_id: { type: 'integer' },
+          rank_in_contest: { type: 'integer' },
+          rating: { type: 'integer' },
+          rating_change: { type: 'integer' },
+          score: { type: 'integer' },
+          is_hidden: { type: 'boolean' },
+          contest_password: { type: 'string' },
+          synced: { type: 'boolean' },
+        },
+      },
+    },
   },
 };
 
