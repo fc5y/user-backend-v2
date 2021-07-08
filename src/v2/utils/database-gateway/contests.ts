@@ -8,6 +8,7 @@ import { getUrl } from '../get-url';
 export type GetContestsParams = {
   offset: number;
   limit: number;
+  has_total?: boolean;
 };
 
 export type GetContestsData = {
@@ -51,7 +52,7 @@ const getContestsDataSchema: JSONSchemaType<GetContestsData> = {
   },
 };
 
-export async function getContests({ offset, limit }: GetContestsParams) {
+export async function getContests({ offset, limit, has_total }: GetContestsParams) {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/contests/read',
@@ -59,7 +60,7 @@ export async function getContests({ offset, limit }: GetContestsParams) {
   const { error, error_msg, data } = await fetchApi({
     method: 'POST',
     url,
-    body: { offset, limit, order_by: [{ column: 'start_time', order: 'desc' }] },
+    body: { offset, limit, has_total, order_by: [{ column: 'start_time', order: 'desc' }] },
   });
   const validatedData = !error && data != null ? assertWithSchema(data, getContestsDataSchema) : undefined;
   return { error, error_msg, data: validatedData };
