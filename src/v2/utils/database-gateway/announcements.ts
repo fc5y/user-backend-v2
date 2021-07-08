@@ -65,7 +65,7 @@ export async function getAnnouncements({ offset, limit, announcement_name }: Get
       offset,
       limit,
       where: {
-        announcement_name,
+        announcement_name: announcement_name,
       },
     },
   });
@@ -87,15 +87,77 @@ type createAnnouncementsData = undefined;
 
 export async function createAnnouncements(
   params: createAnnouncementsParams,
-): Promise<ApiResponse<createAnnouncementsData>> {
+): Promise<ApiResponse<createAnnouncementsParams>> {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
-    pathname: '/db/v2/annnouncements/create',
+    pathname: '/db/v2/announcements/create',
   });
   const { error, error_msg, data } = await fetchApi({
     url,
     method: 'POST',
     body: {
+      values: {
+        announcement_name: params.name,
+        announcement_title: params.title,
+        announcement_description: params.description,
+      },
+    },
+  });
+  return { error, error_msg, data };
+}
+
+// #endregion
+
+// #region POST /api/v2/:announcement_name/delete
+
+export type deleteAnnouncementsParams = {
+  announcement_name: string;
+};
+
+export async function deleteAnnouncements({ announcement_name }: deleteAnnouncementsParams) {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/announcements/delete',
+  });
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: {
+      where: {
+        announcement_name: announcement_name,
+      },
+    },
+  });
+  return { error, error_msg, data };
+}
+
+// #endregion
+
+// #region POST /api/v2/:announcement_name/update
+
+export type updateAnnouncementParams = {
+  announcement_name: string;
+  name: string;
+  title: string;
+  description: string;
+};
+
+type updateAnnouncementData = undefined;
+
+export async function updateAnnouncements(
+  params: updateAnnouncementParams,
+): Promise<ApiResponse<updateAnnouncementData>> {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/announcements/update',
+  });
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: {
+      where: {
+        announcement_name: params.announcement_name,
+      },
       values: {
         announcement_name: params.name,
         announcement_title: params.title,
