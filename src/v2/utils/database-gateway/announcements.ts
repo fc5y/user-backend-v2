@@ -9,6 +9,7 @@ export type GetAnnouncementsParams = {
   offset: number;
   limit: number;
   announcement_name?: string;
+  has_total?: boolean;
 };
 
 export type GetAnnouncementsData = {
@@ -53,7 +54,7 @@ const getAnnouncementsDataSchema: JSONSchemaType<GetAnnouncementsData> = {
   },
 };
 
-export async function getAnnouncements({ offset, limit, announcement_name }: GetAnnouncementsParams) {
+export async function getAnnouncements({ offset, limit, announcement_name, has_total }: GetAnnouncementsParams) {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/announcements/read',
@@ -64,6 +65,7 @@ export async function getAnnouncements({ offset, limit, announcement_name }: Get
     body: {
       offset,
       limit,
+      has_total,
       where: {
         announcement_name: announcement_name,
       },
