@@ -63,12 +63,24 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
 
 // #region GET /api/v2/users/{username}/participations
 
-type GetUserParticipationsParams = {
+type getParticipationsByUsernameParams = {
+  username: string;
+};
+
+const getParticipationsByUsernameParamsSchema: JSONSchemaType<getParticipationsByUsernameParams> = {
+  type: 'object',
+  required: ['username'],
+  properties: {
+    username: { type: 'string' },
+  },
+};
+
+type getParticipationsByUsernameQuery = {
   offset: number;
   limit: number;
 };
 
-const getUserParticipationsParamsSchema: JSONSchemaType<GetUserParticipationsParams> = {
+const getParticipationsByUsernameQuerySchema: JSONSchemaType<getParticipationsByUsernameQuery> = {
   type: 'object',
   required: ['offset', 'limit'],
   properties: {
@@ -77,11 +89,11 @@ const getUserParticipationsParamsSchema: JSONSchemaType<GetUserParticipationsPar
   },
 };
 
-async function getUserParticipationsByUsername(req: Request, res: Response, next: NextFunction) {
+async function getParticipationsByUsername(req: Request, res: Response, next: NextFunction) {
   try {
-    const { username } = assertWithSchema(req.params, getUserParamsSchema);
+    const { username } = assertWithSchema(req.params, getParticipationsByUsernameParamsSchema);
     const { user_id } = await getUserIdByUsername(username);
-    const { offset, limit } = assertWithSchema(req.query, getUserParticipationsParamsSchema);
+    const { offset, limit } = assertWithSchema(req.query, getParticipationsByUsernameQuerySchema);
     const { error, error_msg, data } = await db.participations.getParticipations({
       user_id,
       offset,
@@ -102,11 +114,11 @@ async function getUserParticipationsByUsername(req: Request, res: Response, next
         total: data.items.length,
         participations: await Promise.all(
           data.items.map(async (participation) => {
-            const { contest_name, contest_title } = await getContestByContestId(participation.contest_id);
+            const { contest } = await getContestByContestId(participation.contest_id);
             return {
               username,
-              contest_name,
-              contest_title,
+              contest_name: contest.contest_name,
+              contest_title: contest.contest_title,
               contest_total_participations: await getTotalPartitipationsInContest(participation.contest_id),
               is_hidden: participation.is_hidden,
               rating: participation.rating,
@@ -128,6 +140,6 @@ async function getUserParticipationsByUsername(req: Request, res: Response, next
 
 const router = Router(); // /api/v2/users
 router.get('/:username', getUserByUsername);
-router.get('/:username/participations', getUserParticipationsByUsername);
+router.get('/:username/participations', getParticipationsByUsername);
 
 export default router;

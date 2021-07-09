@@ -37,12 +37,5 @@ export async function getContestByContestId(contest_id: number) {
       data: { response: { error, error_msg, data } },
     });
   }
-  if (data.items.length === 0) {
-    throw new GeneralError({
-      error: ERROR_CODE.CONTEST_NOT_FOUND,
-      error_msg: 'Cannot find any contest which matches the given contest id',
-      data: { response: { error, error_msg, data } },
-    });
-  }
-  return { contest_name: data.items[0].contest_name, contest_title: data.items[0].contest_title };
+  return { contest: data.items[0] };
 }
