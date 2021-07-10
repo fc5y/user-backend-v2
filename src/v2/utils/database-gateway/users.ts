@@ -8,7 +8,8 @@ import { assertWithSchema, JSONSchemaType } from '../validation';
 export type GetUsersParams = {
   offset: number;
   limit: number;
-  username: string;
+  username?: string;
+  id?: number;
 };
 
 export type GetUsersData = {
@@ -18,6 +19,8 @@ export type GetUsersData = {
     username: string;
     full_name: string;
     school_name: string;
+    password: string;
+    email: string;
     rating: number;
   }>;
 };
@@ -31,12 +34,14 @@ const getUsersDataSchema: JSONSchemaType<GetUsersData> = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['id', 'username', 'full_name', 'school_name'],
+        required: ['id', 'username', 'full_name', 'school_name', 'email', 'password'],
         properties: {
           id: { type: 'number' },
           username: { type: 'string' },
           full_name: { type: 'string' },
           school_name: { type: 'string' },
+          email: { type: 'string' },
+          password: { type: 'string' },
           rating: { type: 'number', nullable: true },
         },
       },
@@ -44,7 +49,7 @@ const getUsersDataSchema: JSONSchemaType<GetUsersData> = {
   },
 };
 
-export async function getUsers({ offset, limit, username }: GetUsersParams) {
+export async function getUsers({ offset, limit, username, id }: GetUsersParams) {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/users/read',
@@ -55,6 +60,7 @@ export async function getUsers({ offset, limit, username }: GetUsersParams) {
     body: {
       where: {
         username,
+        id,
       },
       offset,
       limit,
@@ -65,3 +71,39 @@ export async function getUsers({ offset, limit, username }: GetUsersParams) {
 }
 
 // #endregion
+
+//#region POST /db/v2/users/update
+export type UpdateUserParams = {
+  user_id: number;
+  username?: string;
+  full_name?: string;
+  email?: string;
+  school_name?: string;
+  password?: string;
+  avatar?: string;
+};
+
+export async function updateUser(params: UpdateUserParams) {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/users/update',
+  });
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: {
+      where: { id: params.user_id },
+      values: {
+        username: params.username,
+        full_name: params.full_name,
+        email: params.email,
+        school_name: params.school_name,
+        password: params.password,
+        avatar: params.avatar,
+      },
+    },
+  });
+  return { error, error_msg, data };
+}
+
+//#endregion

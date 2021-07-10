@@ -4,6 +4,7 @@ import routeContest from './routes/contests';
 import { ERROR_CODE, GeneralError } from './utils/common-errors';
 import routeAnnouncement from './routes/announcements';
 import routeUser from './routes/users';
+import routeMe from './routes/me';
 import logger from './utils/logger';
 
 const router = Router();
@@ -41,6 +42,7 @@ router.get('/timestamp', (req: Request, res: Response) => {
 router.use('/contests', routeContest);
 router.use('/announcements', routeAnnouncement);
 router.use('/users', routeUser);
+router.use('/me', routeMe);
 
 router.use((req: Request, res: Response, next: NextFunction) => {
   next(
