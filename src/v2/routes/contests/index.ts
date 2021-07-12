@@ -80,7 +80,8 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, createContestParamsSchema);
 
-    const { error, error_msg, data } = await db.contests.createContests({
+    // 1. Create contest
+    const createResponse = await db.contests.createContests({
       name: body.name,
       title: body.title,
       start_time: body.start_time,
@@ -88,18 +89,48 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
       can_enter: body.can_enter,
     });
 
-    if (error) {
+    if (createResponse.error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
         error_msg: 'Received non-zero code from Database Gateway when creating contest',
-        data: { response: { error, error_msg, data } },
+        data: { response: createResponse },
       });
     }
 
+    // 2. Get contest
+    const getResponse = await db.contests.getContests({
+      offset: 0,
+      limit: 1,
+      has_total: false,
+      contest_name: body.name,
+    });
+
+    if (getResponse.error || !getResponse.data) {
+      throw new GeneralError({
+        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+        error_msg: 'Received non-zero code from Database Gateway when getting contest',
+        data: { response: getResponse },
+      });
+    }
+
+    const contest = getResponse.data.items[0];
+
+    if (!contest) {
+      throw new GeneralError({
+        error: ERROR_CODE.CONTEST_NOT_FOUND,
+        error_msg: 'Contest not found',
+        data: { contest_name: body.name },
+      });
+    }
+
+    // 3. Reply
+    const total_participations = await getTotalPartitipationsInContest(contest.id);
     res.json({
       error: 0,
       error_msg: 'Contest created',
-      data: null, // TODO: fix this
+      data: {
+        contest: formatContest(contest, { total_participations }),
+      },
     });
   } catch (error) {
     next(error);
