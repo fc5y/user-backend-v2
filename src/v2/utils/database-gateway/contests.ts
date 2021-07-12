@@ -156,3 +156,28 @@ export async function updateContests(params: UpdateContestsParams): Promise<ApiR
 }
 
 // #endregion
+
+// #region POST /db/v2/contests/delete
+
+export type DeleteContestsParams = {
+  where: {
+    contest_name: string;
+  };
+};
+
+export async function deleteContests(params: DeleteContestsParams) {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/contests/delete',
+  });
+
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: { where: { contest_name: params.where.contest_name } },
+  });
+
+  return { error, error_msg, data };
+}
+
+// #endregion
