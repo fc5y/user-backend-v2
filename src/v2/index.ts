@@ -1,13 +1,17 @@
-import { NextFunction, Request, Response, Router } from 'express';
-import { getCurrentTimestamp } from './utils/common-utils';
-import routeContest from './routes/contests';
-import { ERROR_CODE, GeneralError } from './utils/common-errors';
-import routeAnnouncement from './routes/announcements';
-import routeUser from './routes/users';
-import routeMe from './routes/me';
 import logger from './utils/logger';
+import routeAnnouncement from './routes/announcements';
+import routeAuth from './routes/auth';
+import routeContest from './routes/contests';
+import routeMe from './routes/me';
+import routeUser from './routes/users';
+import { ERROR_CODE, GeneralError } from './utils/common-errors';
+import { getCurrentTimestamp } from './utils/common-utils';
+import { NextFunction, Request, Response, Router } from 'express';
+import { sessionMiddleware } from './utils/session-utils';
 
 const router = Router();
+
+router.use(sessionMiddleware());
 
 router.get('/', (_req: Request, res: Response) => {
   res.json({
@@ -35,7 +39,7 @@ router.get('/timestamp', (req: Request, res: Response) => {
       timestamp: getCurrentTimestamp(),
     },
     error: 0,
-    error_msg: '',
+    error_msg: 'Current timestamp',
   });
 });
 
@@ -43,6 +47,7 @@ router.use('/contests', routeContest);
 router.use('/announcements', routeAnnouncement);
 router.use('/users', routeUser);
 router.use('/me', routeMe);
+router.use('/auth', routeAuth);
 
 router.use((req: Request, res: Response, next: NextFunction) => {
   next(
@@ -64,7 +69,7 @@ router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     });
   } else {
     res.status(500).json({
-      error: ERROR_CODE.UNKNOWN_ERROR, // TODO: use a correct error code
+      error: ERROR_CODE.UNKNOWN_ERROR,
       error_msg: 'Unknown error',
       data: err.toString(),
     });
