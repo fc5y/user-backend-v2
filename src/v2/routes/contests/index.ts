@@ -1,7 +1,7 @@
 import db from '../../utils/database-gateway';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import { formatDateTime, formatMaterials } from './utils';
+import { formatContest, formatDateTime, formatMaterials } from './utils';
 import { getTotalContests, getTotalPartitipationsInContest } from '../../utils/cached-requests';
 import { mustBeAdmin } from '../../utils/role-verification';
 import { NextFunction, Request, Response, Router } from 'express';
@@ -39,15 +39,10 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
       data: {
         total: await getTotalContests(),
         contests: await Promise.all(
-          data.items.map(async (contest) => ({
-            can_enter: contest.can_enter,
-            name: contest.contest_name,
-            title: contest.contest_title,
-            duration: contest.duration,
-            start_time: formatDateTime(contest.start_time),
-            total_participations: await getTotalPartitipationsInContest(contest.id),
-            materials: formatMaterials(contest.materials),
-          })),
+          data.items.map(async (contest) => {
+            const total_participations = await getTotalPartitipationsInContest(contest.id);
+            return formatContest(contest, { total_participations });
+          }),
         ),
       },
     };
@@ -83,14 +78,16 @@ const createContestParamsSchema: JSONSchemaType<CreateContestParams> = {
 
 async function createContest(req: Request, res: Response, next: NextFunction) {
   try {
-    const { name, title, start_time, duration, can_enter } = assertWithSchema(req.body, createContestParamsSchema);
+    const body = assertWithSchema(req.body, createContestParamsSchema);
+
     const { error, error_msg, data } = await db.contests.createContests({
-      name,
-      title,
-      start_time,
-      duration,
-      can_enter,
+      name: body.name,
+      title: body.title,
+      start_time: body.start_time,
+      duration: body.duration,
+      can_enter: body.can_enter,
     });
+
     if (error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
@@ -98,9 +95,11 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
         data: { response: { error, error_msg, data } },
       });
     }
+
     res.json({
       error: 0,
       error_msg: 'Contest created',
+      data: null, // TODO: fix this
     });
   } catch (error) {
     next(error);
@@ -125,12 +124,13 @@ const getContestParamsSchema: JSONSchemaType<GetContestParams> = {
 
 async function getContest(req: Request, res: Response, next: NextFunction) {
   try {
-    const { contest_name } = assertWithSchema(req.params, getContestParamsSchema);
+    const params = assertWithSchema(req.params, getContestParamsSchema);
+
     const { error, error_msg, data } = await db.contests.getContests({
       offset: 0,
       limit: 1,
       has_total: false,
-      contest_name,
+      contest_name: params.contest_name,
     });
 
     if (error || !data) {
@@ -147,24 +147,16 @@ async function getContest(req: Request, res: Response, next: NextFunction) {
       throw new GeneralError({
         error: ERROR_CODE.CONTEST_NOT_FOUND,
         error_msg: 'Contest not found',
-        data: { contest_name },
+        data: { contest_name: params.contest_name },
       });
     }
+
+    const total_participations = await getTotalPartitipationsInContest(contest.id);
 
     res.json({
       error: 0,
       error_msg: 'Contest',
-      data: {
-        contest: {
-          name: contest.contest_name,
-          title: contest.contest_title,
-          start_time: contest.start_time,
-          duration: contest.duration,
-          total_participations: await getTotalPartitipationsInContest(contest.id),
-          can_enter: contest.can_enter,
-          materials: formatMaterials(contest.materials),
-        },
-      },
+      data: { contest: formatContest(contest, { total_participations }) },
     });
   } catch (err) {
     next(err);
@@ -222,10 +214,10 @@ const updateContestParamsSchema: JSONSchemaType<UpdateContestParams> = {
 
 async function updateContest(req: Request, res: Response, next: NextFunction) {
   try {
+    // 1. Send update request
     const params = assertWithSchema(req.params, updateContestParamsSchema);
     const body = assertWithSchema(req.body, updateContestBodySchema);
 
-    // 1. Send update request
     const updateResponse = await db.contests.updateContests({
       where: {
         name: params.contest_name,
@@ -278,25 +270,19 @@ async function updateContest(req: Request, res: Response, next: NextFunction) {
     }
 
     // 3. Reply
+    const total_participations = await getTotalPartitipationsInContest(contest.id);
+
     res.json({
       error: 0,
       error_msg: 'Contest updated',
-      data: {
-        contest: {
-          name: contest.contest_name,
-          title: contest.contest_title,
-          start_time: contest.start_time,
-          duration: contest.duration,
-          total_participations: await getTotalPartitipationsInContest(contest.id),
-          can_enter: contest.can_enter,
-          materials: formatMaterials(contest.materials),
-        },
-      },
+      data: { contest: formatContest(contest, { total_participations }) },
     });
   } catch (err) {
     next(err);
   }
 }
+
+// #endregion
 
 const router = Router(); // /api/v2/contests
 router.get('/', getAllContests);
