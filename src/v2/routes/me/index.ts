@@ -4,18 +4,28 @@ import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
 import e, { NextFunction, Request, Response, Router } from 'express';
 import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
-
-const user_id = 20000; // TODO: fix later
+import { loadUser } from '../../utils/session-utils';
 
 //#region  GET /api/v2/me
 
 async function getMyInfo(req: Request, res: Response, next: NextFunction) {
   try {
+    const user = loadUser(req);
+
+    if (!user) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     const { error, error_msg, data } = await db.users.getUsers({
       offset: 0,
       limit: 1,
-      id: user_id,
+      id: user.user_id,
     });
+
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
@@ -68,9 +78,19 @@ const updateMyInfoParamsSchema: JSONSchemaType<UpdateMyInfoParams> = {
 
 async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
   try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     const { full_name, school_name } = assertWithSchema(req.body, updateMyInfoParamsSchema);
     const { error, error_msg } = await db.users.updateUser({
-      user_id,
+      user_id: currentUser.user_id,
       full_name,
       school_name,
     });
@@ -109,12 +129,22 @@ const updateMyPasswordParamsSchema: JSONSchemaType<UpdateMyPasswordParams> = {
 
 async function updateMyPassword(req: Request, res: Response, next: NextFunction) {
   try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     const { old_password, new_password } = assertWithSchema(req.body, updateMyPasswordParamsSchema);
-    const user = await getUserById(user_id);
+    const user = await getUserById(currentUser.user_id);
     const isValidPassword = await bcrypt.compare(old_password, user.password);
     if (isValidPassword) {
       const { error, error_msg } = await db.users.updateUser({
-        user_id,
+        user_id: currentUser.user_id,
         password: await getHashedPassword(new_password),
       });
       if (error) {
@@ -160,9 +190,19 @@ const getMyParticipationsParamsSchema: JSONSchemaType<GetMyParticipationsParams>
 
 async function getMyParticipations(req: Request, res: Response, next: NextFunction) {
   try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     const { offset, limit } = assertWithSchema(req.query, getMyParticipationsParamsSchema);
     const { error, error_msg, data } = await db.participations.getParticipations({
-      user_id,
+      user_id: currentUser.user_id,
       has_total: true,
       offset,
       limit,
@@ -174,7 +214,7 @@ async function getMyParticipations(req: Request, res: Response, next: NextFuncti
         data: { response: { error, error_msg, data } },
       });
     }
-    const user = await getUserById(user_id);
+    const user = await getUserById(currentUser.user_id);
     const result = {
       error: 0,
       error_msg: 'My participations',
@@ -222,9 +262,19 @@ const createMyParticipationsParamsSchema: JSONSchemaType<CreateMyParticipationsP
 
 async function createMyParticipations(req: Request, res: Response, next: NextFunction) {
   try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     const { contest_name, is_hidden } = assertWithSchema(req.body, createMyParticipationsParamsSchema);
     const { error, error_msg, data } = await db.participations.createMyParticipations({
-      user_id,
+      user_id: currentUser.user_id,
       contest_id: await getContestIdByName(contest_name),
       is_hidden,
       contest_password: generateContestPassword(),
@@ -238,7 +288,7 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
         error_msg: 'Received non-zero code from Database Gateway when fetching contests',
-        data: { response: { error, error_msg } },
+        data: { response: { error, error_msg, data } },
       });
     }
     res.json({
