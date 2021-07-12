@@ -284,10 +284,83 @@ async function updateContest(req: Request, res: Response, next: NextFunction) {
 
 // #endregion
 
+// #region POST /api/v2/contests/:contest_name/delete
+
+type DeleteContestParams = {
+  contest_name: string;
+};
+
+const deleteContestParamsSchema: JSONSchemaType<DeleteContestParams> = {
+  type: 'object',
+  required: ['contest_name'],
+  properties: {
+    contest_name: { type: 'string' },
+  },
+};
+
+export async function deleteContest(req: Request, res: Response, next: NextFunction) {
+  try {
+    const params = assertWithSchema(req.params, deleteContestParamsSchema);
+
+    // 1. Send get request
+    const getResponse = await db.contests.getContests({
+      offset: 0,
+      limit: 1,
+      has_total: false,
+      contest_name: params.contest_name,
+    });
+
+    if (getResponse.error || !getResponse.data) {
+      throw new GeneralError({
+        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+        error_msg: 'Received non-zero code from Database Gateway when getting contest',
+        data: { response: getResponse },
+      });
+    }
+
+    const contest = getResponse.data.items[0];
+
+    if (!contest) {
+      throw new GeneralError({
+        error: ERROR_CODE.CONTEST_NOT_FOUND,
+        error_msg: 'Contest not found',
+        data: { contest_name: params.contest_name },
+      });
+    }
+
+    // 2. Send delete request
+    const deleteResponse = await db.contests.deleteContests({
+      where: { contest_name: params.contest_name },
+    });
+
+    if (deleteResponse.error) {
+      throw new GeneralError({
+        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+        error_msg: 'Received non-zero code from Database Gateway when deleting contest',
+        data: { response: deleteResponse },
+      });
+    }
+
+    // 3. Reply
+    res.json({
+      error: 0,
+      error_msg: 'Contest deleted',
+      data: {
+        name: params.contest_name,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// #endregion
+
 const router = Router(); // /api/v2/contests
 router.get('/', getAllContests);
 router.post('/create', mustBeAdmin, createContest);
 router.get('/:contest_name', getContest);
 router.post('/:contest_name/update', mustBeAdmin, updateContest);
+router.post('/:contest_name/delete', mustBeAdmin, deleteContest);
 
 export default router;
