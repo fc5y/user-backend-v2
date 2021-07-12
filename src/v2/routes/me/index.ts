@@ -29,7 +29,7 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching contests',
+        error_msg: 'Received non-zero code from Database Gateway when getting users',
         data: { response: { error, error_msg, data } },
       });
     }
@@ -97,7 +97,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
     if (error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching contests',
+        error_msg: 'Received non-zero code from Database Gateway when getting users',
         data: { response: { error, error_msg } },
       });
     }
@@ -150,7 +150,7 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
       if (error) {
         throw new GeneralError({
           error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-          error_msg: 'Received non-zero code from Database Gateway when fetching contests',
+          error_msg: 'Received non-zero code from Database Gateway when getting users',
           data: { response: { error, error_msg } },
         });
       }
@@ -210,7 +210,7 @@ async function getMyParticipations(req: Request, res: Response, next: NextFuncti
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching contests',
+        error_msg: 'Received non-zero code from Database Gateway when getting my participations',
         data: { response: { error, error_msg, data } },
       });
     }
@@ -287,13 +287,13 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
     if (error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching contests',
+        error_msg: 'Received non-zero code from Database Gateway when creating my participations',
         data: { response: { error, error_msg, data } },
       });
     }
     res.json({
       error: 0,
-      error_msg: 'My participation updated',
+      error_msg: 'My participation created',
     });
   } catch (error) {
     next(error);

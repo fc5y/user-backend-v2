@@ -58,7 +58,7 @@ async function login(req: Request, res: Response, next: NextFunction) {
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching contests',
+        error_msg: 'Received non-zero code from Database Gateway when getting users',
         data: { response: { error, error_msg, data } },
       });
     }
