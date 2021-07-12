@@ -19,21 +19,6 @@ const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
 };
 
-/**
- * @deprecated Use fetchApi instead
- * TODO: remove this export
- */
-export async function http(params: Params) {
-  logger.info(`Fetching ${params.url}`);
-  if (params.body != null) logger.info(params.body);
-  const response = await fetch(params.url, {
-    method: params.method,
-    headers: { ...DEFAULT_HEADERS, ...(params.headers || {}) },
-    body: params.body != null ? JSON.stringify(params.body) : undefined,
-  });
-  return await response.json();
-}
-
 const apiResponseSchema: JSONSchemaType<ApiResponse> = {
   type: 'object',
   required: ['error', 'error_msg'],
@@ -46,7 +31,7 @@ const apiResponseSchema: JSONSchemaType<ApiResponse> = {
 
 export async function fetchApi(params: Params): Promise<ApiResponse> {
   logger.info(`Fetching ${params.url}`);
-  if (params.body != null) logger.info(params.body);
+  if (params.body != null) logger.info(JSON.stringify(params.body));
   const response = await fetch(params.url, {
     method: params.method,
     headers: { ...DEFAULT_HEADERS, ...(params.headers || {}) },

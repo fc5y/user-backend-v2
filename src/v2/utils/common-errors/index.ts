@@ -1,5 +1,3 @@
-import { ErrorObject } from 'ajv';
-
 export const ERROR_CODE = {
   // User Backend v2: 500000..599999
   JSON_SCHEMA_VALIDATION_FAILED: 500120,
@@ -9,6 +7,7 @@ export const ERROR_CODE = {
   USER_NOT_FOUND: 500425,
   CONTEST_NOT_FOUND: 500555,
   INVALID_PASSWORD: 500689,
+  UNAUTHORIZED: 501401,
   UNKNOWN_ERROR: 599999,
 };
 
