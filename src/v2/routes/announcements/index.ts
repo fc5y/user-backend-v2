@@ -252,28 +252,26 @@ async function updateAnnouncement(req: Request, res: Response, next: NextFunctio
       limit: 1,
       has_total: false,
       announcement_name: newAnnouncementName,
-    })
+    });
     if (getResponse.error || !getResponse.data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
         error_msg: 'Received non-zero error from Database Gateway when updating announcement',
-        data: {response: getResponse},
-      })
+        data: { response: getResponse },
+      });
     }
     // Return Final result
-    const announcementResult = getResponse.data.items[0]    
+    const announcementResult = getResponse.data.items[0];
     const responseResult = {
       name: announcementResult.announcement_name,
       title: announcementResult.announcement_title,
       description: announcementResult.announcement_description,
-    }
+    };
     res.json({
       error: 0,
       error_msg: 'Announcement updated',
       data: responseResult,
-    })
-
-  
+    });
   } catch (error) {
     next(error);
   }
