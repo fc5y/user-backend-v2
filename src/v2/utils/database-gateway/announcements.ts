@@ -139,7 +139,7 @@ export async function deleteAnnouncements({ announcement_name }: DeleteAnnouncem
 
 export type UpdateAnnouncementParams = {
   announcement_name: string;
-  update_name: string;
+  update_name?: string;
   update_title?: string;
   update_description?: string;
 };
