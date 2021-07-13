@@ -79,17 +79,17 @@ export async function getAnnouncements({ offset, limit, announcement_name, has_t
 
 // #region POST /api/v2/announcements
 
-export type createAnnouncementsParams = {
+export type CreateAnnouncementsParams = {
   name: string;
   title: string;
   description: string;
 };
 
-type createAnnouncementsData = undefined;
+type CreateAnnouncementsData = undefined;
 
 export async function createAnnouncements(
-  params: createAnnouncementsParams,
-): Promise<ApiResponse<createAnnouncementsParams>> {
+  params: CreateAnnouncementsParams,
+): Promise<ApiResponse<CreateAnnouncementsData>> {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/announcements/create',
@@ -112,11 +112,11 @@ export async function createAnnouncements(
 
 // #region POST /api/v2/:announcement_name/delete
 
-export type deleteAnnouncementsParams = {
+export type DeleteAnnouncementsParams = {
   announcement_name: string;
 };
 
-export async function deleteAnnouncements({ announcement_name }: deleteAnnouncementsParams) {
+export async function deleteAnnouncements({ announcement_name }: DeleteAnnouncementsParams) {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/announcements/delete',
@@ -137,18 +137,18 @@ export async function deleteAnnouncements({ announcement_name }: deleteAnnouncem
 
 // #region POST /api/v2/:announcement_name/update
 
-export type updateAnnouncementParams = {
+export type UpdateAnnouncementParams = {
   announcement_name: string;
-  name: string;
-  title: string;
-  description: string;
+  update_name: string;
+  update_title?: string;
+  update_description?: string;
 };
 
-type updateAnnouncementData = undefined;
+type UpdateAnnouncementData = undefined;
 
 export async function updateAnnouncements(
-  params: updateAnnouncementParams,
-): Promise<ApiResponse<updateAnnouncementData>> {
+  params: UpdateAnnouncementParams,
+): Promise<ApiResponse<UpdateAnnouncementData>> {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/announcements/update',
@@ -161,9 +161,9 @@ export async function updateAnnouncements(
         announcement_name: params.announcement_name,
       },
       values: {
-        announcement_name: params.name,
-        announcement_title: params.title,
-        announcement_description: params.description,
+        announcement_name: params.update_name,
+        announcement_title: params.update_title,
+        announcement_description: params.update_description,
       },
     },
   });
