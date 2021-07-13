@@ -9,6 +9,14 @@ export function formatMaterials(materialsRaw: string) {
   return result;
 }
 
+export function materialsToDatabaseFormat(materials: Array<{ name: string; value: string }> = []): string {
+  const result: Record<string, string> = {};
+  for (const { name, value } of materials) {
+    result[name] = value;
+  }
+  return JSON.stringify(result);
+}
+
 export function formatDateTime(dateTimeRaw: string | number) {
   if (typeof dateTimeRaw === 'number') return dateTimeRaw;
   return Math.floor(new Date(dateTimeRaw).getTime() / 1000);

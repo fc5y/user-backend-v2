@@ -1,7 +1,7 @@
 import db from '../../utils/database-gateway';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import { formatContest, formatDateTime, formatMaterials } from './utils';
+import { formatContest, materialsToDatabaseFormat } from './utils';
 import { getTotalContests, getTotalPartitipationsInContest } from '../../utils/cached-requests';
 import { mustBeAdmin } from '../../utils/role-verification';
 import { NextFunction, Request, Response, Router } from 'express';
@@ -259,7 +259,7 @@ async function updateContest(req: Request, res: Response, next: NextFunction) {
         start_time: body.start_time,
         duration: body.duration,
         can_enter: body.can_enter,
-        materials: JSON.stringify(body.materials),
+        materials: materialsToDatabaseFormat(body.materials),
       },
     });
 
