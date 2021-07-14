@@ -56,13 +56,13 @@ async function getAllAnnouncements(req: Request, res: Response, next: NextFuncti
 
 // #region POST /api/v2/anouncements
 
-type createAnnouncementParams = {
+type CreateAnnouncementParams = {
   name: string;
   title: string;
   description: string;
 };
 
-const createAnnouncementParamsSchema: JSONSchemaType<createAnnouncementParams> = {
+const createAnnouncementParamsSchema: JSONSchemaType<CreateAnnouncementParams> = {
   type: 'object',
   required: ['name', 'title', 'description'],
   properties: {
@@ -107,11 +107,11 @@ async function createAnnouncement(req: Request, res: Response, next: NextFunctio
 
 // #region GET /api/v2/:announcement_name
 
-type getAnnouncementByNameParams = {
+type GetAnnouncementByNameParams = {
   announcement_name: string;
 };
 
-const getAnnouncementByNameParamsSchema: JSONSchemaType<getAnnouncementByNameParams> = {
+const getAnnouncementByNameParamsSchema: JSONSchemaType<GetAnnouncementByNameParams> = {
   type: 'object',
   required: ['announcement_name'],
   properties: {
@@ -157,11 +157,11 @@ async function getAnnouncementByName(req: Request, res: Response, next: NextFunc
 
 // #region POST /api/v2/:announcement_name/delete
 
-type deleteAnnouncementParams = {
+type DeleteAnnouncementParams = {
   announcement_name: string;
 };
 
-const deleteAnnouncementParamsSchema: JSONSchemaType<deleteAnnouncementParams> = {
+const deleteAnnouncementParamsSchema: JSONSchemaType<DeleteAnnouncementParams> = {
   type: 'object',
   required: ['announcement_name'],
   properties: {
@@ -198,17 +198,17 @@ async function deleteAnnouncement(req: Request, res: Response, next: NextFunctio
 
 // #region POST /api/v2/:announcement_name/update
 
-type updateAnnouncementParams = {
+type UpdateAnnouncementParams = {
   announcement_name: string;
 };
 
-type updateAnnouncementBody = {
+type UpdateAnnouncementBody = {
   name: string;
   title: string;
   description: string;
 };
 
-const updateAnnouncementParamsSchema: JSONSchemaType<updateAnnouncementParams> = {
+const updateAnnouncementParamsSchema: JSONSchemaType<UpdateAnnouncementParams> = {
   type: 'object',
   required: ['announcement_name'],
   properties: {
@@ -216,25 +216,26 @@ const updateAnnouncementParamsSchema: JSONSchemaType<updateAnnouncementParams> =
   },
 };
 
-const updateAnnouncementBodySchema: JSONSchemaType<updateAnnouncementBody> = {
+const updateAnnouncementBodySchema: JSONSchemaType<UpdateAnnouncementBody> = {
   type: 'object',
-  required: ['name', 'title', 'description'],
+  required: [],
   properties: {
-    name: { type: 'string' },
-    title: { type: 'string' },
-    description: { type: 'string' },
+    name: { type: 'string', nullable: true },
+    title: { type: 'string', nullable: true },
+    description: { type: 'string', nullable: true },
   },
 };
 
 async function updateAnnouncement(req: Request, res: Response, next: NextFunction) {
   try {
+    // POST Update request
     const { announcement_name } = assertWithSchema(req.params, updateAnnouncementParamsSchema);
     const { name, title, description } = assertWithSchema(req.body, updateAnnouncementBodySchema);
     const { error, error_msg, data } = await db.announcements.updateAnnouncements({
       announcement_name: announcement_name,
-      name: name,
-      title: title,
-      description: description,
+      update_name: name,
+      update_title: title,
+      update_description: description,
     });
     if (error) {
       throw new GeneralError({
@@ -243,18 +244,34 @@ async function updateAnnouncement(req: Request, res: Response, next: NextFunctio
         data: { response: { error, error_msg, data } },
       });
     }
-    const result = {
+
+    // GET Update response
+    const newAnnouncementName = name || announcement_name;
+    const getResponse = await db.announcements.getAnnouncements({
+      offset: 0,
+      limit: 1,
+      has_total: false,
+      announcement_name: newAnnouncementName,
+    });
+    if (getResponse.error || !getResponse.data) {
+      throw new GeneralError({
+        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+        error_msg: 'Received non-zero error from Database Gateway when updating announcement',
+        data: { response: getResponse },
+      });
+    }
+    // Return Final result
+    const announcementResult = getResponse.data.items[0];
+    const responseResult = {
+      name: announcementResult.announcement_name,
+      title: announcementResult.announcement_title,
+      description: announcementResult.announcement_description,
+    };
+    res.json({
       error: 0,
       error_msg: 'Announcement updated',
-      data: {
-        announcement: {
-          name: name,
-          title: title,
-          description: description,
-        },
-      },
-    };
-    res.json(result);
+      data: responseResult,
+    });
   } catch (error) {
     next(error);
   }
