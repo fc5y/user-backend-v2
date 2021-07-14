@@ -29,7 +29,7 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching contests',
+        error_msg: 'Received non-zero code from Database Gateway when getting contests',
         data: { response: { error, error_msg, data } },
       });
     }
@@ -92,7 +92,7 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
     if (createResponse.error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when creating contest',
+        error_msg: 'Received non-zero code from Database Gateway when creating contests',
         data: { response: createResponse },
       });
     }
@@ -108,7 +108,7 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
     if (getResponse.error || !getResponse.data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when getting contest',
+        error_msg: 'Received non-zero code from Database Gateway when getting contests',
         data: { response: getResponse },
       });
     }
@@ -167,7 +167,7 @@ async function getContest(req: Request, res: Response, next: NextFunction) {
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when getting contest',
+        error_msg: 'Received non-zero code from Database Gateway when getting contests',
         data: { response: { error, error_msg, data } },
       });
     }
@@ -266,7 +266,7 @@ async function updateContest(req: Request, res: Response, next: NextFunction) {
     if (updateResponse.error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when updating contest',
+        error_msg: 'Received non-zero code from Database Gateway when updating contests',
         data: { response: updateResponse },
       });
     }
@@ -285,7 +285,7 @@ async function updateContest(req: Request, res: Response, next: NextFunction) {
     if (getResponse.error || !getResponse.data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when updating contest',
+        error_msg: 'Received non-zero code from Database Gateway when getting contests',
         data: { response: getResponse },
       });
     }
@@ -344,7 +344,7 @@ export async function deleteContest(req: Request, res: Response, next: NextFunct
     if (getResponse.error || !getResponse.data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when getting contest',
+        error_msg: 'Received non-zero code from Database Gateway when getting contests',
         data: { response: getResponse },
       });
     }
@@ -367,7 +367,7 @@ export async function deleteContest(req: Request, res: Response, next: NextFunct
     if (deleteResponse.error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when deleting contest',
+        error_msg: 'Received non-zero code from Database Gateway when deleting contests',
         data: { response: deleteResponse },
       });
     }

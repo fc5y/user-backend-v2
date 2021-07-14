@@ -30,7 +30,7 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching users',
+        error_msg: 'Received non-zero code from Database Gateway when getting users',
         data: { response: { error, error_msg, data } },
       });
     }
@@ -103,7 +103,7 @@ async function getParticipationsByUsername(req: Request, res: Response, next: Ne
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching participations',
+        error_msg: 'Received non-zero code from Database Gateway when getting participations',
         data: { response: { error, error_msg, data } },
       });
     }

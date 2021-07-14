@@ -28,7 +28,7 @@ async function getAllAnnouncements(req: Request, res: Response, next: NextFuncti
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching announcements',
+        error_msg: 'Received non-zero code from Database Gateway when getting announcements',
         data: { response: { error, error_msg, data } },
       });
     }
@@ -130,7 +130,7 @@ async function getAnnouncementByName(req: Request, res: Response, next: NextFunc
     if (error || !data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when fetching AnnouncementByName',
+        error_msg: 'Received non-zero code from Database Gateway when getting announcements',
         data: { response: { error, error_msg, data } },
       });
     }
@@ -178,7 +178,7 @@ async function deleteAnnouncement(req: Request, res: Response, next: NextFunctio
     if (error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when deleting Announcement',
+        error_msg: 'Received non-zero code from Database Gateway when deleting announcements',
         data: { response: { error, error_msg, data } },
       });
     }
