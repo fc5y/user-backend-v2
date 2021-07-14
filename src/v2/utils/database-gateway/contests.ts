@@ -103,10 +103,80 @@ export async function createContests(params: CreateContestsParams): Promise<ApiR
         start_time: params.start_time,
         duration: params.duration,
         can_enter: params.can_enter,
-        materials: '{}', // TODO: allow this to be fetched from params
+        materials: '{}',
       },
     },
   });
+  return { error, error_msg, data };
+}
+
+// #endregion
+
+// #region POST /db/v2/contests/update
+
+export type UpdateContestsParams = {
+  where: {
+    name: string;
+  };
+  values: {
+    name?: string;
+    title?: string;
+    start_time?: number;
+    duration?: number;
+    can_enter?: boolean;
+    materials?: string;
+  };
+};
+
+export type UpdateContestsData = undefined;
+
+export async function updateContests(params: UpdateContestsParams): Promise<ApiResponse<UpdateContestsData>> {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/contests/update',
+  });
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: {
+      where: {
+        contest_name: params.where.name,
+      },
+      values: {
+        contest_name: params.values.name,
+        contest_title: params.values.title,
+        start_time: params.values.start_time,
+        duration: params.values.duration,
+        can_enter: params.values.can_enter,
+        materials: params.values.materials,
+      },
+    },
+  });
+  return { error, error_msg, data };
+}
+
+// #endregion
+
+// #region POST /db/v2/contests/delete
+
+export type DeleteContestsParams = {
+  where: {
+    contest_name: string;
+  };
+};
+
+export async function deleteContests(params: DeleteContestsParams) {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/contests/delete',
+  });
+
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: { where: { contest_name: params.where.contest_name } },
+  });
+
   return { error, error_msg, data };
 }
 
