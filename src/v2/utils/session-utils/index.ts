@@ -3,6 +3,7 @@ import { assertWithSchema } from '../validation';
 import { JSONSchemaType } from 'ajv';
 import { Request } from 'express';
 import { SESSION_SECRET, SESSION_SECRET_ALTERNATIVE } from '../common-config';
+import { ERROR_CODE, GeneralError } from '../common-errors';
 
 type User = {
   user_id: number;
@@ -48,4 +49,16 @@ export function loadUser(req: Request): User | null {
 
 export function saveUser(req: Request, user: User | null) {
   (req.session as any).user = user;
+}
+
+export function loadUserOrThrow(req: Request) {
+  const currentUser = loadUser(req);
+  if (!currentUser) {
+    throw new GeneralError({
+      error: ERROR_CODE.UNAUTHORIZED,
+      error_msg: 'User is not logged in',
+      data: null,
+    });
+  }
+  return currentUser;
 }
