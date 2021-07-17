@@ -54,7 +54,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
     new GeneralError({
       error: ERROR_CODE.ROUTE_NOT_FOUND,
       error_msg: 'You are sending a request to an undefined route.',
-      data: { url: req.url },
+      data: { method: req.method, url: req.url },
     }),
   );
 });
