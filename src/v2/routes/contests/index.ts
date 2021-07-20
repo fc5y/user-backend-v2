@@ -1,4 +1,5 @@
 import db from '../../utils/database-gateway';
+import dbw from '../../utils/database-gateway-wrapper';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { formatContest, materialsToDatabaseFormat } from './utils';
@@ -80,8 +81,7 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, createContestParamsSchema);
 
-    // 1. Create contest
-    const createResponse = await db.contests.createContests({
+    await dbw.contests.createContestOrThrow({
       name: body.name,
       title: body.title,
       start_time: body.start_time,
@@ -89,42 +89,10 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
       can_enter: body.can_enter,
     });
 
-    if (createResponse.error) {
-      throw new GeneralError({
-        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when creating contests',
-        data: { response: createResponse },
-      });
-    }
+    const contest = await dbw.contests.getContestOrThrow({ contest_name: body.name });
 
-    // 2. Get contest
-    const getResponse = await db.contests.getContests({
-      offset: 0,
-      limit: 1,
-      has_total: false,
-      contest_name: body.name,
-    });
-
-    if (getResponse.error || !getResponse.data) {
-      throw new GeneralError({
-        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when getting contests',
-        data: { response: getResponse },
-      });
-    }
-
-    const contest = getResponse.data.items[0];
-
-    if (!contest) {
-      throw new GeneralError({
-        error: ERROR_CODE.CONTEST_NOT_FOUND,
-        error_msg: 'Contest not found',
-        data: { contest_name: body.name },
-      });
-    }
-
-    // 3. Reply
     const total_participations = await getTotalPartitipationsInContest(contest.id);
+
     res.json({
       error: 0,
       error_msg: 'Contest created',
