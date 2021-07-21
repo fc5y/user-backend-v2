@@ -4,6 +4,7 @@ import routeAuth from './routes/auth';
 import routeContest from './routes/contests';
 import routeMe from './routes/me';
 import routeUser from './routes/users';
+import routePostman from './routes/postman';
 import { ERROR_CODE, GeneralError } from './utils/common-errors';
 import { getCurrentTimestamp } from './utils/common-utils';
 import { NextFunction, Request, Response, Router } from 'express';
@@ -48,6 +49,7 @@ router.use('/announcements', routeAnnouncement);
 router.use('/users', routeUser);
 router.use('/me', routeMe);
 router.use('/auth', routeAuth);
+router.use('/postman', routePostman);
 
 router.use((req: Request, res: Response, next: NextFunction) => {
   next(
