@@ -6,6 +6,7 @@ import { loadUser, loadUserOrThrow, saveUser } from '../../utils/session-utils';
 import { assertWithSchema } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import * as otpManager from '../../utils/otp-manager';
+import { sendOtpEmail } from '../../utils/email-service';
 
 //#region GET /api/v2/auth/login-status
 
@@ -145,13 +146,23 @@ async function sendOtp(req: Request, res: Response, next: NextFunction) {
     const email = assertEmail(body.email);
     const currentUser = loadUserOrThrow(req);
     const otp = otpManager.createOtp(currentUser.user_id);
-    // TODO: send OTP email here
+    const { error, error_msg, data } = await sendOtpEmail({
+      recipient_email: email,
+      displayed_name: currentUser.username,
+      otp,
+    });
+    if (error) {
+      throw new GeneralError({
+        error: ERROR_CODE.EMAIL_SERVICE_ERROR,
+        error_msg: 'Received non-zero code from Email Service when sending OTP email',
+        data: { response: { error, error_msg, data } },
+      });
+    }
     res.json({
       error: 0,
       error_msg: 'OTP has been sent',
       data: {
         email,
-        otp, // TODO: remove this later
       },
     });
   } catch (error) {

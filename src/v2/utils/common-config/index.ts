@@ -8,6 +8,8 @@ export const SESSION_SECRET = process.env.SESSION_SECRET || '';
 export const SESSION_SECRET_ALTERNATIVE = process.env.SESSION_SECRET_ALTERNATIVE || '';
 export const CMS_MANAGER_ORIGIN = process.env.CMS_MANAGER_ORIGIN || '';
 export const CMS_MANAGER_SIGNATURE = process.env.CMS_MANAGER_SIGNATURE || '';
+export const SENDER_EMAIL = process.env.SENDER_EMAIL || '';
+export const EMAIL_SERVICE_ORIGIN = process.env.EMAIL_SERVICE_ORIGIN || '';
 
 if (!DATABASE_GATEWAY_ORIGIN) {
   throw new Error(`
@@ -61,5 +63,27 @@ if (!CMS_MANAGER_SIGNATURE) {
 
     Example:
     CMS_MANAGER_SIGNATURE=ada09e51-a269-495f-93c9-e22f593be317
+  `);
+}
+
+if (!SENDER_EMAIL) {
+  throw new Error(`
+    SENDER_EMAIL is empty.
+    Make sure the environment variable is available in .env.
+    Please ask the Email Service maintainers to provide this info.
+
+    Example:
+    SENDER_EMAIL=no-reply@freecontest.net
+  `);
+}
+
+if (!EMAIL_SERVICE_ORIGIN) {
+  throw new Error(`
+    EMAIL_SERVICE_ORIGIN is empty.
+    Make sure the environment variable is available in .env.
+    Please ask the Email Service maintainers to provide this info.
+
+    Example:
+    EMAIL_SERVICE_ORIGIN=https://test.be.freecontest.net
   `);
 }
