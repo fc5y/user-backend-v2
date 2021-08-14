@@ -1,9 +1,11 @@
 import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
+import { cmsManagerLogic } from '../../utils/cms-manager';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { formatContest, materialsToDatabaseFormat } from './utils';
 import { getTotalContests, getTotalPartitipationsInContest } from '../../utils/cached-requests';
+import { loadUserOrThrow } from '../../utils/session-utils';
 import { mustBeAdmin } from '../../utils/role-verification';
 import { NextFunction, Request, Response, Router } from 'express';
 
@@ -355,11 +357,81 @@ export async function deleteContest(req: Request, res: Response, next: NextFunct
 
 // #endregion
 
+// #region POST /api/v2/contests/:contest_name/enter
+
+type EnterContestParams = {
+  contest_name: string;
+};
+
+const enterContestParamsSchema: JSONSchemaType<EnterContestParams> = {
+  type: 'object',
+  required: ['contest_name'],
+  properties: {
+    contest_name: { type: 'string' },
+  },
+};
+
+export async function enterContest(req: Request, res: Response, next: NextFunction) {
+  try {
+    const params = assertWithSchema(req.params, enterContestParamsSchema);
+    const currentUser = loadUserOrThrow(req);
+    const user = await dbw.users.getUserOrThrow({ username: currentUser.username });
+    const contest = await dbw.contests.getContestOrThrow({ contest_name: params.contest_name });
+    const participation = await dbw.participations.getParticipationOrThrow({
+      contest_id: contest.id,
+      user_id: currentUser.user_id,
+    });
+
+    // 1. Ensure can_enter is true
+    if (!contest.can_enter) {
+      throw new GeneralError({
+        error: ERROR_CODE.CONTEST_CANNOT_ENTER,
+        error_msg: 'Unable to enter contest because can_enter is false',
+        data: {
+          contest_name: params.contest_name,
+          username: currentUser.username,
+        },
+      });
+    }
+    // TODO: Before Step 2, we can optimize by checking
+    // if user has already been synced to CMS.
+    // Refer to commit 9a3fa05.
+
+    // 2. Request CMS Manager to create participations
+    await cmsManagerLogic.participations.createParticipationOrThrow(
+      {
+        contest_name: contest.contest_name,
+        username: currentUser.username,
+        password: participation.contest_password,
+        first_name: user.full_name,
+        last_name: user.school_name,
+      },
+      { skipIfFound: true },
+    );
+
+    // 3. Reply
+    res.json({
+      error: 0,
+      error_msg: 'Entered',
+      data: {
+        contest_username: currentUser.username,
+        contest_password: participation.contest_password,
+        can_enter: null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// #endregion
+
 const router = Router(); // /api/v2/contests
 router.get('/', getAllContests);
 router.post('/create', mustBeAdmin, createContest);
 router.get('/:contest_name', getContest);
 router.post('/:contest_name/update', mustBeAdmin, updateContest);
 router.post('/:contest_name/delete', mustBeAdmin, deleteContest);
+router.post('/:contest_name/enter', enterContest);
 
 export default router;
