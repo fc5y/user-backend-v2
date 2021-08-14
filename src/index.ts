@@ -7,7 +7,7 @@ const app = express();
 const port = process.env.PORT || 8013;
 
 app.set('json spaces', 2);
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
