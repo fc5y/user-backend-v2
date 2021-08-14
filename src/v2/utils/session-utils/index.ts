@@ -29,7 +29,6 @@ export function sessionMiddleware() {
     cookie: {
       maxAge: 2419200, // 4 weeks
       httpOnly: true,
-      sameSite: 'strict',
       secure: process.env.NODE_ENV === 'production', // only set secure to true for HTTPS connections
     },
     resave: false,
