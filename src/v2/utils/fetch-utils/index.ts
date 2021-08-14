@@ -4,7 +4,7 @@ import { assertWithSchema, JSONSchemaType } from '../validation';
 
 export type ApiResponse<T = any> = {
   error: number;
-  error_msg: string;
+  error_msg?: string;
   data?: T;
 };
 
@@ -17,14 +17,15 @@ type Params = {
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
+  Accept: '*/*',
 };
 
 const apiResponseSchema: JSONSchemaType<ApiResponse> = {
   type: 'object',
-  required: ['error', 'error_msg'],
+  required: ['error'],
   properties: {
     error: { type: 'integer' },
-    error_msg: { type: 'string' },
+    error_msg: { type: 'string', nullable: true },
     data: { type: 'object', nullable: true },
   },
 };
