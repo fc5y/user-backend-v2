@@ -1,3 +1,5 @@
+import { SHOW_DEBUG } from '../common-config';
+
 export const ERROR_CODE = {
   // User Backend v2: 500000..599999
   JSON_SCHEMA_VALIDATION_FAILED: 500120,
@@ -28,6 +30,10 @@ export class GeneralError extends Error {
   data: any;
 
   constructor({ error, error_msg, data }: { error: number; error_msg: string; data: any }) {
+    if (SHOW_DEBUG == false) {
+      error_msg = '';
+      data = null;
+    }
     super(JSON.stringify({ error, error_msg, data }));
     this.error = error;
     this.error_msg = error_msg;

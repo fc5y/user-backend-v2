@@ -10,6 +10,7 @@ export const CMS_MANAGER_ORIGIN = process.env.CMS_MANAGER_ORIGIN || '';
 export const CMS_MANAGER_SIGNATURE = process.env.CMS_MANAGER_SIGNATURE || '';
 export const SENDER_EMAIL = process.env.SENDER_EMAIL || '';
 export const EMAIL_SERVICE_ORIGIN = process.env.EMAIL_SERVICE_ORIGIN || '';
+export const SHOW_DEBUG = process.env.SHOW_DEBUG === 'true';
 
 if (!DATABASE_GATEWAY_ORIGIN) {
   throw new Error(`
