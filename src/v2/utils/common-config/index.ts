@@ -88,3 +88,23 @@ if (!EMAIL_SERVICE_ORIGIN) {
     EMAIL_SERVICE_ORIGIN=https://test.be.freecontest.net
   `);
 }
+
+if (process.env.DISABLE_ROLE_VERIFICATION !== 'true' && process.env.DISABLE_ROLE_VERIFICATION !== 'false') {
+  throw new Error(`
+    DISABLE_ROLE_VERIFICATION is empty or has the exception value.
+    Make sure the environment variable is available in .env and has the value "true" or "false" (without quotes).
+
+    Example:
+    DISABLE_ROLE_VERIFICATION=false
+  `);
+}
+
+if (process.env.SHOW_DEBUG !== 'true' && process.env.SHOW_DEBUG !== 'false') {
+  throw new Error(`
+    SHOW_DEBUG is empty or has the exception value.
+    Make sure the environment variable is available in .env and has the value "true" or "false" (without quotes).
+
+    Example:
+    SHOW_DEBUG=true
+  `);
+}
