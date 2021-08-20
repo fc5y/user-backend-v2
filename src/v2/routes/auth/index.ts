@@ -119,13 +119,15 @@ const REGEX_EMAIL_LOOSE = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\
 
 type SentOtpBody = {
   email: string;
+  full_name: string;
 };
 
 const sendOtpBodySchema: JSONSchemaType<SentOtpBody> = {
   type: 'object',
-  required: ['email'],
+  required: ['email', 'full_name'],
   properties: {
     email: { type: 'string' },
+    full_name: { type: 'string' },
   },
 };
 
@@ -144,11 +146,10 @@ async function sendOtp(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, sendOtpBodySchema);
     const email = assertEmail(body.email);
-    const currentUser = loadUserOrThrow(req);
-    const otp = otpManager.createOtp(currentUser.user_id);
+    const otp = otpManager.createOtp(email);
     const { error, error_msg, data } = await sendOtpEmail({
       recipient_email: email,
-      displayed_name: currentUser.username,
+      displayed_name: body.full_name,
       otp,
     });
     if (error) {
@@ -175,13 +176,17 @@ async function sendOtp(req: Request, res: Response, next: NextFunction) {
 //#region POST /api/v2/auth/verify-otp
 
 type VerifyOtpBody = {
+  email: string;
   otp: string;
 };
 
 const verifyOtpBodySchema: JSONSchemaType<VerifyOtpBody> = {
   type: 'object',
-  required: ['otp'],
+  required: ['email', 'otp'],
   properties: {
+    email: {
+      type: 'string',
+    },
     otp: {
       type: 'string',
       minLength: 6,
@@ -192,9 +197,8 @@ const verifyOtpBodySchema: JSONSchemaType<VerifyOtpBody> = {
 
 async function verifyOtp(req: Request, res: Response, next: NextFunction) {
   try {
-    const currentUser = loadUserOrThrow(req);
     const body = assertWithSchema(req.body, verifyOtpBodySchema);
-    const isCorrectOtp = otpManager.verifyOtp(currentUser.user_id, body.otp);
+    const isCorrectOtp = otpManager.verifyOtp(body.email, body.otp);
     res.json({
       error: 0,
       error_msg: isCorrectOtp ? 'OTP is correct' : 'OTP is incorrect',
