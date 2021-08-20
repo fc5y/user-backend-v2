@@ -9,6 +9,7 @@ import { ERROR_CODE, GeneralError } from './utils/common-errors';
 import { getCurrentTimestamp } from './utils/common-utils';
 import { NextFunction, Request, Response, Router } from 'express';
 import { sessionMiddleware } from './utils/session-utils';
+import { SHOW_DEBUG } from './utils/common-config';
 
 const router = Router();
 
@@ -66,14 +67,14 @@ router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof GeneralError) {
     res.status(400).json({
       error: err.error,
-      error_msg: err.error_msg,
-      data: err.data,
+      error_msg: SHOW_DEBUG ? err.error_msg : '',
+      data: SHOW_DEBUG ? err.data : null,
     });
   } else {
     res.status(500).json({
       error: ERROR_CODE.UNKNOWN_ERROR,
-      error_msg: 'Unknown error',
-      data: err.toString(),
+      error_msg: SHOW_DEBUG ? 'Unknown error' : '',
+      data: SHOW_DEBUG ? err.toString() : null,
     });
   }
 });
