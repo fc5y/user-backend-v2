@@ -1,11 +1,13 @@
-import db from '../../utils/database-gateway';
 import bcrypt from 'bcryptjs';
-import { JSONSchemaType } from 'ajv';
-import { NextFunction, Request, Response, Router } from 'express';
-import { loadUser, loadUserOrThrow, saveUser } from '../../utils/session-utils';
+import db from '../../utils/database-gateway';
+import dbw from '../../utils/database-gateway-wrapper';
+import * as otpManager from '../../utils/otp-manager';
+import { assertEmail, assertUsername, assertPassword } from './utils';
 import { assertWithSchema } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import * as otpManager from '../../utils/otp-manager';
+import { JSONSchemaType } from 'ajv';
+import { loadUser, saveUser } from '../../utils/session-utils';
+import { NextFunction, Request, Response, Router } from 'express';
 import { sendOtpEmail } from '../../utils/email-service';
 
 //#region GET /api/v2/auth/login-status
@@ -115,8 +117,6 @@ async function logout(req: Request, res: Response, next: NextFunction) {
 
 //#region POST /api/v2/auth/send-otp
 
-const REGEX_EMAIL_LOOSE = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-
 type SentOtpBody = {
   email: string;
   full_name: string;
@@ -130,17 +130,6 @@ const sendOtpBodySchema: JSONSchemaType<SentOtpBody> = {
     full_name: { type: 'string' },
   },
 };
-
-function assertEmail(email: string) {
-  if (!REGEX_EMAIL_LOOSE.test(email)) {
-    throw new GeneralError({
-      error: ERROR_CODE.INVALID_EMAIL,
-      error_msg: 'Invalid email',
-      data: { email },
-    });
-  }
-  return email;
-}
 
 async function sendOtp(req: Request, res: Response, next: NextFunction) {
   try {
@@ -211,9 +200,89 @@ async function verifyOtp(req: Request, res: Response, next: NextFunction) {
 
 //#endregion
 
+//#region POST /api/v2/auth/signup
+
+type SignupBody = {
+  otp: string;
+  username: string;
+  full_name: string;
+  school_name: string;
+  email: string;
+  password: string;
+};
+
+// TODO: add maxLength restrictions here
+const signupBodySchema: JSONSchemaType<SignupBody> = {
+  type: 'object',
+  required: ['otp', 'username', 'full_name', 'school_name', 'email', 'password'],
+  properties: {
+    otp: {
+      type: 'string',
+      minLength: 6,
+      maxLength: 6,
+    },
+    username: {
+      type: 'string',
+    },
+    full_name: {
+      type: 'string',
+    },
+    school_name: {
+      type: 'string',
+    },
+    email: {
+      type: 'string',
+    },
+    password: {
+      type: 'string',
+    },
+  },
+};
+
 async function signup(req: Request, res: Response, next: NextFunction) {
-  throw new Error('Not implemented');
+  try {
+    const body = assertWithSchema(req.body, signupBodySchema);
+    assertUsername(body.username);
+    assertPassword(body.password);
+
+    // 1. Verify OTP
+    const isCorrectOtp = otpManager.verifyOtp(body.email, body.otp);
+    if (!isCorrectOtp) {
+      throw new GeneralError({
+        error: ERROR_CODE.OTP_INCORRECT,
+        error_msg: 'OTP is incorrect',
+        data: { email: body.email, otp: body.otp },
+      });
+    }
+
+    // TODO: check if user exists
+
+    // 2. Create user
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(body.password, salt);
+
+    await dbw.users.createUserOrThrow({
+      username: body.username,
+      full_name: body.full_name,
+      email: body.email,
+      school_name: body.school_name,
+      password: hashedPassword,
+    });
+
+    res.json({
+      error: 0,
+      error_msg: 'Signed up successfully',
+      data: {
+        username: body.username,
+        email: body.email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 }
+
+//#endregion
 
 const router = Router();
 router.get('/login-status', loginStatus);
