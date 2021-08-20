@@ -4,7 +4,7 @@ import crypto from 'crypto';
 const OTP_STORE_MAX_LENGTH = 10000; // < 1 MB
 const OTP_STORE_MAX_AGE = 10 * 60 * 1000; // 10 minutes
 
-const otpStore = new LRUCache<number, string>({
+const otpStore = new LRUCache<string, string>({
   max: OTP_STORE_MAX_LENGTH,
   maxAge: OTP_STORE_MAX_AGE,
   stale: false,
@@ -16,12 +16,12 @@ function getRandomOtp(): string {
   return ('000000' + value).slice(-6);
 }
 
-export function createOtp(user_id: number): string {
+export function createOtp(email: string): string {
   const newOtp = getRandomOtp();
-  otpStore.set(user_id, newOtp);
+  otpStore.set(email, newOtp);
   return newOtp;
 }
 
-export function verifyOtp(user_id: number, otp: string) {
-  return otpStore.get(user_id) === otp;
+export function verifyOtp(email: string, otp: string) {
+  return otpStore.get(email) === otp;
 }
