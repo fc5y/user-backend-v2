@@ -24,3 +24,20 @@ export async function getUserOrThrow({ username }: { username: string }) {
 
   return user;
 }
+
+export async function createUserOrThrow(params: {
+  username: string;
+  full_name: string;
+  email: string;
+  school_name: string;
+  password: string;
+}) {
+  const createResponse = await db.users.createUser(params);
+  if (createResponse.error) {
+    throw new GeneralError({
+      error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+      error_msg: 'Received non-zero code from Database Gateway when creating users',
+      data: { response: createResponse },
+    });
+  }
+}
