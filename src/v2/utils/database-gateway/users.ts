@@ -107,3 +107,38 @@ export async function updateUser(params: UpdateUserParams) {
 }
 
 //#endregion
+
+//#region POST /db/v2/users/create
+
+export type CreateUserParams = {
+  username: string;
+  full_name: string;
+  email: string;
+  school_name: string;
+  password: string;
+};
+
+export async function createUser(params: CreateUserParams) {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/users/create',
+  });
+
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: {
+      values: {
+        username: params.username,
+        full_name: params.full_name,
+        email: params.email,
+        school_name: params.school_name,
+        password: params.password,
+        avatar: `${Date.now()}`, // TODO: make this optional in Database Gateway
+      },
+    },
+  });
+  return { error, error_msg, data };
+}
+
+//#endregion
