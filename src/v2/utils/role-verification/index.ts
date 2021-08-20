@@ -1,7 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import { DISABLE_ROLE_VERIFICATION } from '../common-config';
+import { ADMIN_USERNAME_LIST, DISABLE_ROLE_VERIFICATION } from '../common-config';
 import { ERROR_CODE, GeneralError } from '../common-errors';
 import { loadUser } from '../session-utils';
+
+const adminUsernameList = ADMIN_USERNAME_LIST.split(';').filter((username) => !!username);
 
 export function mustBeAdmin(req: Request, res: Response, next: NextFunction) {
   try {
@@ -17,7 +19,7 @@ export function mustBeAdmin(req: Request, res: Response, next: NextFunction) {
       });
     }
 
-    const isAdmin = user.username === 'admin'; // TODO: fix this
+    const isAdmin = adminUsernameList.includes(user.username);
 
     if (!isAdmin) {
       throw new GeneralError({

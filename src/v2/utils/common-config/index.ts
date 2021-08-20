@@ -13,3 +13,4 @@ export const CMS_MANAGER_SIGNATURE = process.env.CMS_MANAGER_SIGNATURE || '';
 export const SENDER_EMAIL = process.env.SENDER_EMAIL || '';
 export const EMAIL_SERVICE_ORIGIN = process.env.EMAIL_SERVICE_ORIGIN || '';
 export const SHOW_DEBUG = process.env.SHOW_DEBUG === 'true';
+export const ADMIN_USERNAME_LIST = process.env.ADMIN_USERNAME_LIST || '';

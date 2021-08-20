@@ -78,7 +78,7 @@ export function validateEnvironmentVariables() {
 
   if (process.env.DISABLE_ROLE_VERIFICATION !== 'true' && process.env.DISABLE_ROLE_VERIFICATION !== 'false') {
     throw new Error(`
-      DISABLE_ROLE_VERIFICATION is empty or has the exception value.
+      DISABLE_ROLE_VERIFICATION is empty or invalid.
       Make sure the environment variable is available in .env and has the value "true" or "false" (without quotes).
   
       Example:
@@ -88,11 +88,22 @@ export function validateEnvironmentVariables() {
 
   if (process.env.SHOW_DEBUG !== 'true' && process.env.SHOW_DEBUG !== 'false') {
     throw new Error(`
-      SHOW_DEBUG is empty or has the exception value.
+      SHOW_DEBUG is empty or invalid.
       Make sure the environment variable is available in .env and has the value "true" or "false" (without quotes).
   
       Example:
       SHOW_DEBUG=true
+    `);
+  }
+
+  if (!process.env.ADMIN_USERNAME_LIST) {
+    throw new Error(`
+      ADMIN_USERNAME_LIST is empty.
+      Make sure the environment variable is available in .env.
+      Use semicolon as the delimiter.
+  
+      Example:
+      ADMIN_USERNAME_LIST=admin;johndoe123;janedoe456
     `);
   }
 }
