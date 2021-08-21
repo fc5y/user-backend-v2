@@ -172,7 +172,7 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
 
 //#endregion
 
-//#region  GET /api/v2/users/me/participations
+//#region GET /api/v2/me/participations
 
 type GetMyParticipationsParams = {
   offset: number;
