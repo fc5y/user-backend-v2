@@ -1,5 +1,6 @@
 import db from '../../database-gateway';
 import { ERROR_CODE, GeneralError } from '../../common-errors';
+import { GetParticipationsData } from '../../database-gateway/participations';
 
 export async function getParticipationOrThrow({ contest_id, user_id }: { contest_id: number; user_id: number }) {
   const { error, error_msg, data } = await db.participations.getParticipations({
@@ -29,4 +30,30 @@ export async function getParticipationOrThrow({ contest_id, user_id }: { contest
   }
 
   return participation;
+}
+
+export async function getParticipationOrUndefined({
+  contest_id,
+  user_id,
+}: {
+  contest_id: number;
+  user_id: number;
+}): Promise<GetParticipationsData['items'][number] | undefined> {
+  const { error, error_msg, data } = await db.participations.getParticipations({
+    contest_id,
+    user_id,
+    offset: 0,
+    limit: 1,
+    has_total: false,
+  });
+
+  if (error || !data) {
+    throw new GeneralError({
+      error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+      error_msg: 'Received non-zero code from Database Gateway when getting participations',
+      data: { response: { error, error_msg, data } },
+    });
+  }
+
+  return data.items[0] || undefined;
 }
