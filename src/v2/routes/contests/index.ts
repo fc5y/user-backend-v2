@@ -3,7 +3,7 @@ import dbw from '../../utils/database-gateway-wrapper';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { cmsManagerLogic } from '../../utils/cms-manager';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import { formatContest, materialsToDatabaseFormat, zip } from './utils';
+import { formatContest, formatParticipation, materialsToDatabaseFormat, zip } from './utils';
 import { getTotalContests, getTotalPartitipationsInContest } from '../../utils/cached-requests';
 import { GetParticipationsData } from '../../utils/database-gateway/participations';
 import { loadUser, loadUserOrThrow } from '../../utils/session-utils';
@@ -73,9 +73,10 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
         contests: await Promise.all(
           data.items.map(async (contest) => {
             const total_participations = await getTotalPartitipationsInContest(contest.id);
+            const myParticipation = myParticipations ? myParticipations[contest.id] : undefined;
             return formatContest(contest, {
               total_participations,
-              my_participation: (myParticipations && myParticipations[contest.id]) || undefined,
+              my_participation: myParticipation ? formatParticipation(myParticipation) : undefined,
             });
           }),
         ),
@@ -158,38 +159,22 @@ const getContestParamsSchema: JSONSchemaType<GetContestParams> = {
 async function getContest(req: Request, res: Response, next: NextFunction) {
   try {
     const params = assertWithSchema(req.params, getContestParamsSchema);
-
-    const { error, error_msg, data } = await db.contests.getContests({
-      offset: 0,
-      limit: 1,
-      has_total: false,
-      contest_name: params.contest_name,
-    });
-
-    if (error || !data) {
-      throw new GeneralError({
-        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when getting contests',
-        data: { response: { error, error_msg, data } },
-      });
-    }
-
-    const contest = data.items[0];
-
-    if (!contest) {
-      throw new GeneralError({
-        error: ERROR_CODE.CONTEST_NOT_FOUND,
-        error_msg: 'Contest not found',
-        data: { contest_name: params.contest_name },
-      });
-    }
-
-    const total_participations = await getTotalPartitipationsInContest(contest.id);
+    const contest = await dbw.contests.getContestOrThrow({ contest_name: params.contest_name });
+    const currentUser = loadUser(req);
+    const myParticipation = currentUser
+      ? await dbw.participations.getParticipationOrUndefined({ contest_id: contest.id, user_id: currentUser.user_id })
+      : undefined;
+    const totalParticipations = await getTotalPartitipationsInContest(contest.id);
 
     res.json({
       error: 0,
       error_msg: 'Contest',
-      data: { contest: formatContest(contest, { total_participations }) },
+      data: {
+        contest: formatContest(contest, {
+          total_participations: totalParticipations,
+          my_participation: myParticipation ? formatParticipation(myParticipation) : undefined,
+        }),
+      },
     });
   } catch (err) {
     next(err);
