@@ -66,7 +66,7 @@ router.get('/', (req, res, next) => {
             /api/v2/me/update
             /api/v2/me/participations/create
             /api/v2/me/change-password
-            /api/v2/users/me/participations
+            /api/v2/me/participations
             /api/v2/auth/signup
             /api/v2/auth/login
             /api/v2/auth/send-otp
