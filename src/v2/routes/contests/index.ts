@@ -3,9 +3,10 @@ import dbw from '../../utils/database-gateway-wrapper';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { cmsManagerLogic } from '../../utils/cms-manager';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import { formatContest, materialsToDatabaseFormat } from './utils';
+import { formatContest, materialsToDatabaseFormat, zip } from './utils';
 import { getTotalContests, getTotalPartitipationsInContest } from '../../utils/cached-requests';
-import { loadUserOrThrow } from '../../utils/session-utils';
+import { GetParticipationsData } from '../../utils/database-gateway/participations';
+import { loadUser, loadUserOrThrow } from '../../utils/session-utils';
 import { mustBeAdmin } from '../../utils/role-verification';
 import { NextFunction, Request, Response, Router } from 'express';
 
@@ -27,6 +28,7 @@ const getAllContestsParamsSchema: JSONSchemaType<GetAllContestsParams> = {
 
 async function getAllContests(req: Request, res: Response, next: NextFunction) {
   try {
+    // 1. Get contests
     const { offset, limit } = assertWithSchema(req.query, getAllContestsParamsSchema);
     const { error, error_msg, data } = await db.contests.getContests({ offset, limit });
     if (error || !data) {
@@ -36,6 +38,33 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
         data: { response: { error, error_msg, data } },
       });
     }
+
+    // 2. Get my participations
+    const currentUser = loadUser(req);
+
+    const getMyParticipations = async (
+      contestIds: number[],
+      userId: number,
+    ): Promise<Record<number, GetParticipationsData['items'][number]>> => {
+      const myParticipationList = await Promise.all(
+        contestIds.map(
+          async (contestId) =>
+            await dbw.participations.getParticipationOrUndefined({ contest_id: contestId, user_id: userId }),
+        ),
+      );
+      return Object.fromEntries(
+        zip(contestIds, myParticipationList).flatMap(([key, value]) => [value ? [key, value] : []]),
+      );
+    };
+
+    const myParticipations = currentUser
+      ? await getMyParticipations(
+          data.items.map((contest) => contest.id),
+          currentUser.user_id,
+        )
+      : null;
+
+    // 3. Reply
     const result = {
       error: 0,
       error_msg: 'Contests',
@@ -44,7 +73,10 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
         contests: await Promise.all(
           data.items.map(async (contest) => {
             const total_participations = await getTotalPartitipationsInContest(contest.id);
-            return formatContest(contest, { total_participations });
+            return formatContest(contest, {
+              total_participations,
+              my_participation: (myParticipations && myParticipations[contest.id]) || undefined,
+            });
           }),
         ),
       },
