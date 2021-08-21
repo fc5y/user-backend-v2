@@ -1,4 +1,5 @@
 import { GetContestsData } from '../../utils/database-gateway/contests';
+import { GetParticipationsData } from '../../utils/database-gateway/participations';
 
 export function formatMaterials(materialsRaw: string) {
   const materials = JSON.parse(materialsRaw) as Record<string, string>;
@@ -24,7 +25,10 @@ export function formatDateTime(dateTimeRaw: string | number) {
 
 export function formatContest(
   contest: GetContestsData['items'][number],
-  { total_participations }: { total_participations: number },
+  {
+    total_participations,
+    my_participation,
+  }: { total_participations: number; my_participation?: GetParticipationsData['items'][number] },
 ) {
   return {
     name: contest.contest_name,
@@ -34,5 +38,14 @@ export function formatContest(
     total_participations,
     can_enter: contest.can_enter,
     materials: formatMaterials(contest.materials),
+    my_participation,
   };
+}
+
+export function zip<T1, T2>(list1: T1[], list2: T2[]): [T1, T2][] {
+  const result: [T1, T2][] = [];
+  for (let i = 0; i < list1.length && i < list2.length; i++) {
+    result.push([list1[i], list2[i]]);
+  }
+  return result;
 }
