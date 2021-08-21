@@ -23,12 +23,22 @@ export function formatDateTime(dateTimeRaw: string | number) {
   return Math.floor(new Date(dateTimeRaw).getTime() / 1000);
 }
 
+export function formatParticipation(participation: GetParticipationsData['items'][number]) {
+  return {
+    is_hidden: participation.is_hidden,
+    contest_rank: participation.rank_in_contest,
+    rating: participation.rating,
+    rating_change: participation.rating_change,
+    score: participation.score,
+  };
+}
+
 export function formatContest(
   contest: GetContestsData['items'][number],
   {
     total_participations,
     my_participation,
-  }: { total_participations: number; my_participation?: GetParticipationsData['items'][number] },
+  }: { total_participations: number; my_participation?: ReturnType<typeof formatParticipation> },
 ) {
   return {
     name: contest.contest_name,
