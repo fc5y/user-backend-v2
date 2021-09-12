@@ -62,6 +62,7 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
 //#endregion
 
 //#region POST /api/v2/me/update
+
 type UpdateMyInfoParams = {
   full_name: string;
   school_name: string;
@@ -113,6 +114,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
 //#endregion
 
 //#region POST /api/v2/me/change-password
+
 type UpdateMyPasswordParams = {
   old_password: string;
   new_password: string;
@@ -246,6 +248,7 @@ async function getMyParticipations(req: Request, res: Response, next: NextFuncti
 //#endregion
 
 //#region POST /api/v2/me/participations/create
+
 type CreateMyParticipationsParams = {
   contest_name: string;
   is_hidden: boolean;

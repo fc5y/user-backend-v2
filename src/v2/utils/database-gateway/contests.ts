@@ -3,7 +3,7 @@ import { assertWithSchema, JSONSchemaType } from '../validation';
 import { DATABASE_GATEWAY_ORIGIN } from '../common-config';
 import { getUrl } from '../get-url';
 
-// #region GET /db/v2/contests
+// #region POST /db/v2/contests/read
 
 export type GetContestsParams = {
   offset: number;

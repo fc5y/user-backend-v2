@@ -3,7 +3,7 @@ import { ApiResponse, fetchApi } from '../fetch-utils';
 import { DATABASE_GATEWAY_ORIGIN } from '../common-config';
 import { assertWithSchema, JSONSchemaType } from '../validation';
 
-// #region GET /db/v2/users
+// #region POST /db/v2/users/read
 
 export type GetUsersParams = {
   offset: number;
@@ -73,6 +73,7 @@ export async function getUsers({ offset, limit, username, id }: GetUsersParams) 
 // #endregion
 
 //#region POST /db/v2/users/update
+
 export type UpdateUserParams = {
   user_id: number;
   username?: string;

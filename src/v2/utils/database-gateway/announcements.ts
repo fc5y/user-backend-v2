@@ -3,7 +3,7 @@ import { DATABASE_GATEWAY_ORIGIN } from '../common-config';
 import { assertWithSchema, JSONSchemaType } from '../validation';
 import { getUrl } from '../get-url';
 
-// #region GET /db/v2/announcements
+// #region GET /db/v2/announcements/read
 
 export type GetAnnouncementsParams = {
   offset: number;
@@ -77,7 +77,7 @@ export async function getAnnouncements({ offset, limit, announcement_name, has_t
 
 // #endregion
 
-// #region POST /api/v2/announcements
+// #region POST /db/v2/announcements/create
 
 export type CreateAnnouncementsParams = {
   name: string;
@@ -110,7 +110,7 @@ export async function createAnnouncements(
 
 // #endregion
 
-// #region POST /api/v2/:announcement_name/delete
+// #region POST /db/v2/announcements/delete
 
 export type DeleteAnnouncementsParams = {
   announcement_name: string;
@@ -135,7 +135,7 @@ export async function deleteAnnouncements({ announcement_name }: DeleteAnnouncem
 
 // #endregion
 
-// #region POST /api/v2/:announcement_name/update
+// #region POST /db/v2/announcements/update
 
 export type UpdateAnnouncementParams = {
   announcement_name: string;
