@@ -1,12 +1,12 @@
 import db from '../database-gateway';
 
 const CACHE_VALID_DURATION = 10000; // 10 seconds
-const cacheGetTotalPartitipationsInContest: Record<number, { lastUpdate: Date; value: number }> = {};
+const cacheGetTotalParticipationsInContest: Record<number, { lastUpdate: Date; value: number }> = {};
 
-export async function getTotalPartitipationsInContest(contest_id: number) {
+export async function getTotalParticipationsInContest(contest_id: number) {
   // 1. If contest_id is found in cache, return the cached value
   const now = new Date();
-  const lastEntry = cacheGetTotalPartitipationsInContest[contest_id];
+  const lastEntry = cacheGetTotalParticipationsInContest[contest_id];
   if (lastEntry && now.getTime() - lastEntry.lastUpdate.getTime() <= CACHE_VALID_DURATION) {
     return lastEntry.value;
   }
@@ -19,7 +19,7 @@ export async function getTotalPartitipationsInContest(contest_id: number) {
   });
   const result = !error && data != null && data.total != null ? data.total : -1;
   // 3. Store the result in cache and return the result
-  cacheGetTotalPartitipationsInContest[contest_id] = { lastUpdate: now, value: result };
+  cacheGetTotalParticipationsInContest[contest_id] = { lastUpdate: now, value: result };
   return result;
 }
 

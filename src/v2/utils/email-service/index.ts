@@ -5,7 +5,8 @@ import { getUrl } from '../get-url';
 const EMAIL_TEMPLATE_ID = {
   OTP_EMAIL_TEMPLATE_ID: 10001,
 };
-// #region POST email-service/v2/send-otp
+
+// #region POST /email/v1/send
 
 export type SendOtpEmailParams = {
   recipient_email: string;

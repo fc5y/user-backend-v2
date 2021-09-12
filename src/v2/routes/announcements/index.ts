@@ -54,7 +54,7 @@ async function getAllAnnouncements(req: Request, res: Response, next: NextFuncti
 
 // #endregion
 
-// #region POST /api/v2/anouncements
+// #region POST /api/v2/announcements/create
 
 type CreateAnnouncementParams = {
   name: string;
@@ -105,7 +105,7 @@ async function createAnnouncement(req: Request, res: Response, next: NextFunctio
 
 // #endregion
 
-// #region GET /api/v2/:announcement_name
+// #region GET /api/v2/announcements/:announcement_name
 
 type GetAnnouncementByNameParams = {
   announcement_name: string;
@@ -155,7 +155,7 @@ async function getAnnouncementByName(req: Request, res: Response, next: NextFunc
 
 // #endregion
 
-// #region POST /api/v2/:announcement_name/delete
+// #region POST /api/v2/announcements/:announcement_name/delete
 
 type DeleteAnnouncementParams = {
   announcement_name: string;
@@ -196,7 +196,7 @@ async function deleteAnnouncement(req: Request, res: Response, next: NextFunctio
 
 // #endregion
 
-// #region POST /api/v2/:announcement_name/update
+// #region POST /api/v2/announcements/:announcement_name/update
 
 type UpdateAnnouncementParams = {
   announcement_name: string;

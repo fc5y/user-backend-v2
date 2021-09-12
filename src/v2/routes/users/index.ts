@@ -3,9 +3,9 @@ import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { NextFunction, Request, Response, Router } from 'express';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { getUserIdByUsername, getContestByContestId } from './utils';
-import { getTotalPartitipationsInContest } from '../../utils/cached-requests';
+import { getTotalParticipationsInContest } from '../../utils/cached-requests';
 
-// #region GET /api/v2/users/{username}
+// #region GET /api/v2/users/:username
 
 type GetUserParams = {
   username: string;
@@ -61,7 +61,7 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
 
 // #endregion
 
-// #region GET /api/v2/users/{username}/participations
+// #region GET /api/v2/users/:username/participations
 
 type getParticipationsByUsernameParams = {
   username: string;
@@ -119,7 +119,7 @@ async function getParticipationsByUsername(req: Request, res: Response, next: Ne
               username,
               contest_name: contest.contest_name,
               contest_title: contest.contest_title,
-              contest_total_participations: await getTotalPartitipationsInContest(participation.contest_id),
+              contest_total_participations: await getTotalParticipationsInContest(participation.contest_id),
               is_hidden: participation.is_hidden,
               rating: participation.rating,
               rating_change: participation.rating_change,

@@ -4,7 +4,7 @@ import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { cmsManagerLogic } from '../../utils/cms-manager';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { formatContest, formatParticipation, materialsToDatabaseFormat, zip } from './utils';
-import { getTotalContests, getTotalPartitipationsInContest } from '../../utils/cached-requests';
+import { getTotalContests, getTotalParticipationsInContest } from '../../utils/cached-requests';
 import { GetParticipationsData } from '../../utils/database-gateway/participations';
 import { loadUser, loadUserOrThrow } from '../../utils/session-utils';
 import { mustBeAdmin } from '../../utils/role-verification';
@@ -72,7 +72,7 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
         total: await getTotalContests(),
         contests: await Promise.all(
           data.items.map(async (contest) => {
-            const total_participations = await getTotalPartitipationsInContest(contest.id);
+            const total_participations = await getTotalParticipationsInContest(contest.id);
             const myParticipation = myParticipations ? myParticipations[contest.id] : undefined;
             return formatContest(contest, {
               total_participations,
@@ -90,7 +90,7 @@ async function getAllContests(req: Request, res: Response, next: NextFunction) {
 
 // #endregion
 
-// #region POST /api/v2/contests
+// #region POST /api/v2/contests/create
 
 type CreateContestParams = {
   name: string;
@@ -126,7 +126,7 @@ async function createContest(req: Request, res: Response, next: NextFunction) {
 
     const contest = await dbw.contests.getContestOrThrow({ contest_name: body.name });
 
-    const total_participations = await getTotalPartitipationsInContest(contest.id);
+    const total_participations = await getTotalParticipationsInContest(contest.id);
 
     res.json({
       error: 0,
@@ -164,7 +164,7 @@ async function getContest(req: Request, res: Response, next: NextFunction) {
     const myParticipation = currentUser
       ? await dbw.participations.getParticipationOrUndefined({ contest_id: contest.id, user_id: currentUser.user_id })
       : undefined;
-    const totalParticipations = await getTotalPartitipationsInContest(contest.id);
+    const totalParticipations = await getTotalParticipationsInContest(contest.id);
 
     res.json({
       error: 0,
@@ -288,7 +288,7 @@ async function updateContest(req: Request, res: Response, next: NextFunction) {
     }
 
     // 3. Reply
-    const total_participations = await getTotalPartitipationsInContest(contest.id);
+    const total_participations = await getTotalParticipationsInContest(contest.id);
 
     res.json({
       error: 0,
