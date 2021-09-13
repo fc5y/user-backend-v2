@@ -410,21 +410,27 @@ export async function enterContest(req: Request, res: Response, next: NextFuncti
         },
       });
     }
-    // TODO: Before Step 2, we can optimize by checking
-    // if user has already been synced to CMS.
-    // Refer to commit 9a3fa05.
 
-    // 2. Request CMS Manager to create participations
-    await cmsManagerLogic.participations.createParticipationOrThrow(
-      {
-        contest_name: contest.contest_name,
-        username: currentUser.username,
-        password: participation.contest_password,
-        first_name: user.full_name,
-        last_name: user.school_name,
-      },
-      { skipIfFound: true },
-    );
+    // 2. Check if user has already been synced to CMS
+    // If not, request CMS Manager to sync user
+    if (!participation.synced) {
+      await cmsManagerLogic.participations.createParticipationOrThrow(
+        {
+          contest_name: contest.contest_name,
+          username: currentUser.username,
+          password: participation.contest_password,
+          first_name: user.full_name,
+          last_name: user.school_name,
+        },
+        { skipIfFound: true },
+      );
+
+      // Mark user as synced in database
+      await dbw.participations.markParticipationAsSyncedOrThrow({
+        contest_id: contest.id,
+        user_id: currentUser.user_id,
+      });
+    }
 
     // 3. Reply
     res.json({

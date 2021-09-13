@@ -26,7 +26,7 @@ export async function createUser({
     headers,
     body: {
       contest_id,
-      users: [{ username, password, first_name, last_name }],
+      users: { username, password, first_name, last_name },
     },
   });
   return { error, error_msg, data };

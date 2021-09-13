@@ -1,8 +1,9 @@
 import db from '../../utils/database-gateway';
+import dbw from '../../utils/database-gateway-wrapper';
 import bcrypt from 'bcryptjs';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
-import e, { NextFunction, Request, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
 import { loadUser } from '../../utils/session-utils';
 
@@ -276,16 +277,30 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
     }
 
     const { contest_name, is_hidden } = assertWithSchema(req.body, createMyParticipationsParamsSchema);
+    const contest_id = await getContestIdByName(contest_name);
+
+    const participation = await dbw.participations.getParticipationOrUndefined({
+      user_id: currentUser.user_id,
+      contest_id,
+    });
+    if (participation !== undefined) {
+      throw new GeneralError({
+        error: ERROR_CODE.PARTICIPATION_ALREADY_EXISTS,
+        error_msg: 'Participation already exists',
+        data: {},
+      });
+    }
+
     const { error, error_msg, data } = await db.participations.createMyParticipations({
       user_id: currentUser.user_id,
-      contest_id: await getContestIdByName(contest_name),
+      contest_id,
       is_hidden,
       contest_password: generateContestPassword(),
       rank_in_contest: 0,
       rating: 0,
       rating_change: 0,
       score: 0,
-      synced: true,
+      synced: false,
     });
     if (error) {
       throw new GeneralError({

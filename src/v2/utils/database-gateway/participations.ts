@@ -1,7 +1,9 @@
+import { ApiResponse, fetchApi } from '../fetch-utils';
 import { assertWithSchema, JSONSchemaType } from '../validation';
 import { DATABASE_GATEWAY_ORIGIN } from '../common-config';
-import { fetchApi } from '../fetch-utils';
 import { getUrl } from '../get-url';
+
+// #region POST /db/v2/participations/read
 
 export type GetParticipationsParams = {
   user_id?: number;
@@ -76,6 +78,10 @@ export async function getParticipations({ contest_id, user_id, offset, limit, ha
   return { error, error_msg, data: validatedData };
 }
 
+// #endregion
+
+// #region POST /db/v2/participations/create
+
 export type CreateMyParticipationsParams = {
   user_id: number;
   contest_id: number;
@@ -112,3 +118,60 @@ export async function createMyParticipations(params: CreateMyParticipationsParam
   });
   return { error, error_msg, data };
 }
+
+// #endregion
+
+// #region POST /db/v2/participations/update
+
+export type UpdateParticipationsParams = {
+  where: {
+    user_id: number;
+    contest_id: number;
+  };
+  values: {
+    user_id?: number;
+    contest_id?: number;
+    rank_in_contest?: number;
+    rating?: number;
+    rating_change?: number;
+    score?: number;
+    is_hidden?: boolean;
+    contest_password?: string;
+    synced?: boolean;
+  };
+};
+
+export type UpdateParticipationsData = undefined;
+
+export async function updateParticipations(
+  params: UpdateParticipationsParams,
+): Promise<ApiResponse<UpdateParticipationsData>> {
+  const url = getUrl({
+    origin: DATABASE_GATEWAY_ORIGIN,
+    pathname: '/db/v2/participations/update',
+  });
+  const { error, error_msg, data } = await fetchApi({
+    url,
+    method: 'POST',
+    body: {
+      where: {
+        user_id: params.where.user_id,
+        contest_id: params.where.contest_id,
+      },
+      values: {
+        user_id: params.values.user_id,
+        contest_id: params.values.contest_id,
+        rank_in_contest: params.values.rank_in_contest,
+        rating: params.values.rating,
+        rating_change: params.values.rating_change,
+        score: params.values.score,
+        is_hidden: params.values.is_hidden,
+        contest_password: params.values.contest_password,
+        synced: params.values.synced,
+      },
+    },
+  });
+  return { error, error_msg, data };
+}
+
+// #endregion

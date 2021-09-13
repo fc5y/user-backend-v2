@@ -57,3 +57,29 @@ export async function getParticipationOrUndefined({
 
   return data.items[0] || undefined;
 }
+
+export async function markParticipationAsSyncedOrThrow({
+  contest_id,
+  user_id,
+}: {
+  contest_id: number;
+  user_id: number;
+}): Promise<void> {
+  const { error, error_msg, data } = await db.participations.updateParticipations({
+    where: {
+      contest_id,
+      user_id,
+    },
+    values: {
+      synced: true,
+    },
+  });
+
+  if (error || !data) {
+    throw new GeneralError({
+      error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+      error_msg: 'Received non-zero code from Database Gateway when getting users',
+      data: { response: { error, error_msg } },
+    });
+  }
+}
