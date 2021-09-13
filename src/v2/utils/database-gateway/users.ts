@@ -135,7 +135,6 @@ export async function createUser(params: CreateUserParams) {
         email: params.email,
         school_name: params.school_name,
         password: params.password,
-        avatar: `${Date.now()}`, // TODO: make this optional in Database Gateway
       },
     },
   });
