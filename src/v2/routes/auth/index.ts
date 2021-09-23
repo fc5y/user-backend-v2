@@ -2,13 +2,14 @@ import bcrypt from 'bcryptjs';
 import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import * as otpManager from '../../utils/otp-manager';
+import * as jwtManager from '../../utils/jwt-manager';
 import { assertEmail, assertUsername, assertPassword } from './utils';
 import { assertWithSchema } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { JSONSchemaType } from 'ajv';
 import { loadUser, saveUser } from '../../utils/session-utils';
 import { NextFunction, Request, Response, Router } from 'express';
-import { sendOtpEmail } from '../../utils/email-service';
+import { sendEmail, EMAIL_TEMPLATE_ID } from '../../utils/email-service';
 
 //#region GET /api/v2/auth/login-status
 
@@ -115,31 +116,38 @@ async function logout(req: Request, res: Response, next: NextFunction) {
 
 //#endregion
 
-//#region POST /api/v2/auth/send-otp
+//#region POST /api/v2/auth/request-signup
 
-type SentOtpBody = {
+type RequestSignupBody = {
   email: string;
+  username: string;
   full_name: string;
 };
 
-const sendOtpBodySchema: JSONSchemaType<SentOtpBody> = {
+const requestSignupBodySchema: JSONSchemaType<RequestSignupBody> = {
   type: 'object',
-  required: ['email', 'full_name'],
+  required: ['email', 'username', 'full_name'],
   properties: {
     email: { type: 'string' },
+    username: { type: 'string' },
     full_name: { type: 'string' },
   },
 };
 
-async function sendOtp(req: Request, res: Response, next: NextFunction) {
+async function requestSignup(req: Request, res: Response, next: NextFunction) {
   try {
-    const body = assertWithSchema(req.body, sendOtpBodySchema);
+    // TODO: check if username and email are used
+    const body = assertWithSchema(req.body, requestSignupBodySchema);
     const email = assertEmail(body.email);
-    const otp = otpManager.createOtp(email);
-    const { error, error_msg, data } = await sendOtpEmail({
+    const username = assertUsername(body.username);
+    const otp = otpManager.createOtp(email, username);
+    const { error, error_msg, data } = await sendEmail({
       recipient_email: email,
-      displayed_name: body.full_name,
-      otp,
+      template_id: EMAIL_TEMPLATE_ID.SIGNUP_EMAIL_TEMPLATE_ID,
+      params: {
+        displayed_name: body.full_name,
+        otp,
+      },
     });
     if (error) {
       throw new GeneralError({
@@ -166,15 +174,20 @@ async function sendOtp(req: Request, res: Response, next: NextFunction) {
 
 type VerifyOtpBody = {
   email: string;
+  username: string | null;
   otp: string;
 };
 
 const verifyOtpBodySchema: JSONSchemaType<VerifyOtpBody> = {
   type: 'object',
-  required: ['email', 'otp'],
+  required: ['email', 'username', 'otp'],
   properties: {
     email: {
       type: 'string',
+    },
+    username: {
+      type: 'string',
+      nullable: true,
     },
     otp: {
       type: 'string',
@@ -187,11 +200,19 @@ const verifyOtpBodySchema: JSONSchemaType<VerifyOtpBody> = {
 async function verifyOtp(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, verifyOtpBodySchema);
-    const isCorrectOtp = otpManager.verifyOtp(body.email, body.otp);
+    const isCorrectOtp = otpManager.verifyOtp(body.email, body.username, body.otp);
+    if (!isCorrectOtp) {
+      return res.json({
+        error: ERROR_CODE.OTP_INCORRECT,
+        error_msg: 'OTP is incorrect',
+      });
+    }
+
+    const token = jwtManager.createJWT(body.email, body.username);
     res.json({
       error: 0,
-      error_msg: isCorrectOtp ? 'OTP is correct' : 'OTP is incorrect',
-      data: { is_correct_otp: isCorrectOtp },
+      error_msg: 'OTP is correct',
+      data: { token },
     });
   } catch (error) {
     next(error);
@@ -203,7 +224,7 @@ async function verifyOtp(req: Request, res: Response, next: NextFunction) {
 //#region POST /api/v2/auth/signup
 
 type SignupBody = {
-  otp: string;
+  token: string;
   username: string;
   full_name: string;
   school_name: string;
@@ -214,12 +235,10 @@ type SignupBody = {
 // TODO: add maxLength restrictions here
 const signupBodySchema: JSONSchemaType<SignupBody> = {
   type: 'object',
-  required: ['otp', 'username', 'full_name', 'school_name', 'email', 'password'],
+  required: ['token', 'username', 'full_name', 'school_name', 'email', 'password'],
   properties: {
-    otp: {
+    token: {
       type: 'string',
-      minLength: 6,
-      maxLength: 6,
     },
     username: {
       type: 'string',
@@ -242,18 +261,12 @@ const signupBodySchema: JSONSchemaType<SignupBody> = {
 async function signup(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, signupBodySchema);
+    assertEmail(body.email);
     assertUsername(body.username);
     assertPassword(body.password);
 
-    // 1. Verify OTP
-    const isCorrectOtp = otpManager.verifyOtp(body.email, body.otp);
-    if (!isCorrectOtp) {
-      throw new GeneralError({
-        error: ERROR_CODE.OTP_INCORRECT,
-        error_msg: 'OTP is incorrect',
-        data: { email: body.email, otp: body.otp },
-      });
-    }
+    // 1. Verify JWT
+    jwtManager.verifyJWTOrThrow(body.email, body.username, body.token);
 
     // TODO: check if user exists
 
@@ -288,7 +301,7 @@ const router = Router();
 router.get('/login-status', loginStatus);
 router.post('/login', login);
 router.post('/logout', logout);
-router.post('/send-otp', sendOtp);
+router.post('/request-signup', requestSignup);
 router.post('/verify-otp', verifyOtp);
 router.post('/signup', signup);
 export default router;
