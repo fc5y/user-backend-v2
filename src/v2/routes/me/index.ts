@@ -80,6 +80,7 @@ const updateMyInfoParamsSchema: JSONSchemaType<UpdateMyInfoParams> = {
 
 async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
   try {
+    // 1. Check if user is logged in
     const currentUser = loadUser(req);
 
     if (!currentUser) {
@@ -90,22 +91,67 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
       });
     }
 
+    const user_id = currentUser.user_id;
+
+    // 2. Send update request
     const { full_name, school_name } = assertWithSchema(req.body, updateMyInfoParamsSchema);
-    const { error, error_msg } = await db.users.updateUser({
-      user_id: currentUser.user_id,
-      full_name,
-      school_name,
+
+    const updateResponse = await db.users.updateUser({
+      where: {
+        user_id,
+      },
+      values: {
+        full_name,
+        school_name,
+      },
     });
-    if (error) {
+
+    if (updateResponse.error) {
+      throw new GeneralError({
+        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+        error_msg: 'Received non-zero code from Database Gateway when updating user',
+        data: { response: updateResponse },
+      });
+    }
+
+    // 3. Send get request
+    const getResponse = await db.users.getUsers({
+      offset: 0,
+      limit: 1,
+      id: user_id,
+    });
+
+    if (getResponse.error || !getResponse.data) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
         error_msg: 'Received non-zero code from Database Gateway when getting users',
-        data: { response: { error, error_msg } },
+        data: { response: getResponse },
       });
     }
+
+    const user = getResponse.data.items[0];
+
+    if (!user) {
+      throw new GeneralError({
+        error: ERROR_CODE.USER_NOT_FOUND,
+        error_msg: 'User not found',
+        data: { user_id },
+      });
+    }
+
+    // 4. Reply
     res.json({
       error: 0,
       error_msg: 'User updated',
+      data: {
+        user: {
+          username: user.username,
+          full_name: user.full_name,
+          school_name: user.school_name,
+          email: user.email,
+          rating: user.rating,
+        },
+      },
     });
   } catch (error) {
     next(error);
@@ -147,8 +193,12 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
     const isValidPassword = await bcrypt.compare(old_password, user.password);
     if (isValidPassword) {
       const { error, error_msg } = await db.users.updateUser({
-        user_id: currentUser.user_id,
-        password: await getHashedPassword(new_password),
+        where: {
+          user_id: currentUser.user_id,
+        },
+        values: {
+          password: await getHashedPassword(new_password),
+        },
       });
       if (error) {
         throw new GeneralError({
