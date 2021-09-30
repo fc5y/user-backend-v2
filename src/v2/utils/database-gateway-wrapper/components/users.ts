@@ -48,9 +48,9 @@ export async function getUserOrUndefined({
   email,
   id,
 }: {
-  username: string;
-  email: string;
-  id: number;
+  username?: string;
+  email?: string;
+  id?: number;
 }): Promise<GetUsersData['items'][number] | undefined> {
   const { error, error_msg, data } = await db.users.getUsers({
     username,
