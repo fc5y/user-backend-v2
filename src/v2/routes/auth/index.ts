@@ -10,7 +10,7 @@ import { JSONSchemaType } from 'ajv';
 import { loadUser, saveUser } from '../../utils/session-utils';
 import { NextFunction, Request, Response, Router } from 'express';
 import { sendEmail, EMAIL_TEMPLATE_ID } from '../../utils/email-service';
-import { getUserOrUndefined } from '../../utils/database-gateway-wrapper/components/users'
+import { getUserOrUndefined } from '../../utils/database-gateway-wrapper/components/users';
 
 //#region GET /api/v2/auth/login-status
 
@@ -141,14 +141,14 @@ async function requestSignup(req: Request, res: Response, next: NextFunction) {
     const body = assertWithSchema(req.body, requestSignupBodySchema);
     const email = assertEmail(body.email);
     const username = assertUsername(body.username);
-    if (await getUserOrUndefined({username : username}) !== undefined){
+    if ((await getUserOrUndefined({ username: username })) !== undefined) {
       throw new GeneralError({
         error: ERROR_CODE.USERNAME_EXISTED,
         error_msg: 'Received non-zero code from Email Service when sending OTP email',
         data: username,
       });
     }
-    if (await getUserOrUndefined({email : email}) !== undefined){
+    if ((await getUserOrUndefined({ email: email })) !== undefined) {
       throw new GeneralError({
         error: ERROR_CODE.EMAIL_EXISTED,
         error_msg: 'Received non-zero code from Email Service when sending OTP email',
