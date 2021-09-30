@@ -10,7 +10,6 @@ import { JSONSchemaType } from 'ajv';
 import { loadUser, saveUser } from '../../utils/session-utils';
 import { NextFunction, Request, Response, Router } from 'express';
 import { sendEmail, EMAIL_TEMPLATE_ID } from '../../utils/email-service';
-import { getUserOrUndefined } from '../../utils/database-gateway-wrapper/components/users';
 
 //#region GET /api/v2/auth/login-status
 
@@ -141,14 +140,14 @@ async function requestSignup(req: Request, res: Response, next: NextFunction) {
     const body = assertWithSchema(req.body, requestSignupBodySchema);
     const email = assertEmail(body.email);
     const username = assertUsername(body.username);
-    if (await getUserOrUndefined({ username }) !== undefined) {
+    if ((await dbw.users.getUserOrUndefined({ username })) !== undefined) {
       throw new GeneralError({
         error: ERROR_CODE.USERNAME_EXISTED,
         error_msg: 'Username already existed',
         data: { username },
       });
     }
-    if (await getUserOrUndefined({ email }) !== undefined) {
+    if ((await dbw.users.getUserOrUndefined({ email })) !== undefined) {
       throw new GeneralError({
         error: ERROR_CODE.EMAIL_EXISTED,
         error_msg: 'Email already existed',

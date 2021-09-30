@@ -88,7 +88,7 @@ export type UpdateUserParams = {
     password?: string;
     avatar?: string;
   };
-}
+};
 
 export async function updateUser(params: UpdateUserParams) {
   const url = getUrl({
