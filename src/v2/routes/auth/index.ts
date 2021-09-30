@@ -275,15 +275,28 @@ const signupBodySchema: JSONSchemaType<SignupBody> = {
 async function signup(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, signupBodySchema);
-    assertEmail(body.email);
-    assertUsername(body.username);
+    const email = assertEmail(body.email);
+    const username = assertUsername(body.username);
     assertPassword(body.password);
 
     // 1. Verify JWT
     jwtManager.verifyJWTOrThrow(body.email, body.username, body.token);
 
     // TODO: check if user exists
-
+    if ((await dbw.users.getUserOrUndefined({ username })) !== undefined) {
+      throw new GeneralError({
+        error: ERROR_CODE.USERNAME_EXISTED,
+        error_msg: 'Username already existed',
+        data: { username },
+      });
+    }
+    if ((await dbw.users.getUserOrUndefined({ email })) !== undefined) {
+      throw new GeneralError({
+        error: ERROR_CODE.EMAIL_EXISTED,
+        error_msg: 'Email already existed',
+        data: { email },
+      });
+    }
     // 2. Create user
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(body.password, salt);
