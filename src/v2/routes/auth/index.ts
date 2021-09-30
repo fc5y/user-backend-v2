@@ -141,18 +141,18 @@ async function requestSignup(req: Request, res: Response, next: NextFunction) {
     const body = assertWithSchema(req.body, requestSignupBodySchema);
     const email = assertEmail(body.email);
     const username = assertUsername(body.username);
-    if ((await getUserOrUndefined({ username: username })) !== undefined) {
+    if (await getUserOrUndefined({ username }) !== undefined) {
       throw new GeneralError({
         error: ERROR_CODE.USERNAME_EXISTED,
-        error_msg: 'Received non-zero code from Email Service when sending OTP email',
-        data: username,
+        error_msg: 'Username already existed',
+        data: { username },
       });
     }
-    if ((await getUserOrUndefined({ email: email })) !== undefined) {
+    if (await getUserOrUndefined({ email }) !== undefined) {
       throw new GeneralError({
         error: ERROR_CODE.EMAIL_EXISTED,
-        error_msg: 'Received non-zero code from Email Service when sending OTP email',
-        data: email,
+        error_msg: 'Email already existed',
+        data: { email },
       });
     }
     const otp = otpManager.createOtp(email, username);

@@ -77,14 +77,18 @@ export async function getUsers({ offset, limit, username, email, id }: GetUsersP
 //#region POST /db/v2/users/update
 
 export type UpdateUserParams = {
-  user_id: number;
-  username?: string;
-  full_name?: string;
-  email?: string;
-  school_name?: string;
-  password?: string;
-  avatar?: string;
-};
+  where: {
+    user_id: number;
+  };
+  values: {
+    username?: string;
+    full_name?: string;
+    email?: string;
+    school_name?: string;
+    password?: string;
+    avatar?: string;
+  };
+}
 
 export async function updateUser(params: UpdateUserParams) {
   const url = getUrl({
@@ -95,14 +99,14 @@ export async function updateUser(params: UpdateUserParams) {
     url,
     method: 'POST',
     body: {
-      where: { id: params.user_id },
+      where: { id: params.where.user_id },
       values: {
-        username: params.username,
-        full_name: params.full_name,
-        email: params.email,
-        school_name: params.school_name,
-        password: params.password,
-        avatar: params.avatar,
+        username: params.values.username,
+        full_name: params.values.full_name,
+        email: params.values.email,
+        school_name: params.values.school_name,
+        password: params.values.password,
+        avatar: params.values.avatar,
       },
     },
   });
