@@ -9,6 +9,7 @@ export type GetUsersParams = {
   offset: number;
   limit: number;
   username?: string;
+  email?: string;
   id?: number;
 };
 
@@ -49,7 +50,7 @@ const getUsersDataSchema: JSONSchemaType<GetUsersData> = {
   },
 };
 
-export async function getUsers({ offset, limit, username, id }: GetUsersParams) {
+export async function getUsers({ offset, limit, username, email, id }: GetUsersParams) {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/users/read',
@@ -60,6 +61,7 @@ export async function getUsers({ offset, limit, username, id }: GetUsersParams) 
     body: {
       where: {
         username,
+        email,
         id,
       },
       offset,
@@ -75,17 +77,13 @@ export async function getUsers({ offset, limit, username, id }: GetUsersParams) 
 //#region POST /db/v2/users/update
 
 export type UpdateUserParams = {
-  where: {
-    user_id: number;
-  };
-  values: {
-    username?: string;
-    full_name?: string;
-    email?: string;
-    school_name?: string;
-    password?: string;
-    avatar?: string;
-  };
+  user_id: number;
+  username?: string;
+  full_name?: string;
+  email?: string;
+  school_name?: string;
+  password?: string;
+  avatar?: string;
 };
 
 export async function updateUser(params: UpdateUserParams) {
@@ -97,14 +95,14 @@ export async function updateUser(params: UpdateUserParams) {
     url,
     method: 'POST',
     body: {
-      where: { id: params.where.user_id },
+      where: { id: params.user_id },
       values: {
-        username: params.values.username,
-        full_name: params.values.full_name,
-        email: params.values.email,
-        school_name: params.values.school_name,
-        password: params.values.password,
-        avatar: params.values.avatar,
+        username: params.username,
+        full_name: params.full_name,
+        email: params.email,
+        school_name: params.school_name,
+        password: params.password,
+        avatar: params.avatar,
       },
     },
   });
