@@ -9,6 +9,7 @@ export type GetUsersParams = {
   offset: number;
   limit: number;
   username?: string;
+  email?: string;
   id?: number;
 };
 
@@ -49,7 +50,7 @@ const getUsersDataSchema: JSONSchemaType<GetUsersData> = {
   },
 };
 
-export async function getUsers({ offset, limit, username, id }: GetUsersParams) {
+export async function getUsers({ offset, limit, username, email, id }: GetUsersParams) {
   const url = getUrl({
     origin: DATABASE_GATEWAY_ORIGIN,
     pathname: '/db/v2/users/read',
@@ -60,6 +61,7 @@ export async function getUsers({ offset, limit, username, id }: GetUsersParams) 
     body: {
       where: {
         username,
+        email,
         id,
       },
       offset,
