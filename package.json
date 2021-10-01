@@ -10,8 +10,8 @@
     "build": "tsc",
     "serve": "node dist/index.js",
     "dev": "node-dev src/index.ts",
-    "lint-check": "prettier --config .prettierrc.json 'src/**/*.ts' --check",
-    "lint-fix": "prettier --config .prettierrc.json 'src/**/*.ts' --write"
+    "lint-check": "prettier --config .prettierrc.json \"src/**/*.ts\" --check",
+    "lint-fix": "prettier --config .prettierrc.json \"src/**/*.ts\" --write"
   },
   "precommit": {
     "run": [
