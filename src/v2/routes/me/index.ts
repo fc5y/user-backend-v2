@@ -6,7 +6,7 @@ import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
 import { NextFunction, Request, Response, Router } from 'express';
 import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
 import { loadUser } from '../../utils/session-utils';
-import { assertPassword } from '../../utils/auth/utils';
+import { assertPassword } from '../../utils/auth';
 
 //#region  GET /api/v2/me
 
@@ -190,7 +190,6 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
     }
 
     const body = assertWithSchema(req.body, updateMyPasswordParamsSchema);
-
     const new_password = assertPassword(body.new_password);
     const old_password = body.old_password;
 
