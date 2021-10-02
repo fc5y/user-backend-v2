@@ -3,7 +3,7 @@ import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import * as otpManager from '../../utils/otp-manager';
 import * as jwtManager from '../../utils/jwt-manager';
-import { assertEmail, assertUsername, assertPassword } from '../../utils/utils';
+import { assertEmail, assertUsername, assertPassword } from '../../utils/auth/utils';
 import { assertWithSchema } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { JSONSchemaType } from 'ajv';

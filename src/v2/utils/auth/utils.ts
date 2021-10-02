@@ -1,4 +1,4 @@
-import { ERROR_CODE, GeneralError } from './common-errors';
+import { ERROR_CODE, GeneralError } from '../common-errors';
 
 const REGEX_EMAIL_LOOSE = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 const REGEX_USERNAME_LOOSE = /^[a-zA-Z0-9_-]{3,16}$/;
