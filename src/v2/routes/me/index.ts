@@ -1,9 +1,9 @@
 import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import bcrypt from 'bcryptjs';
-import AWS from "aws-sdk";
-import multer from "multer";
-import sharp from "sharp";
+import AWS from 'aws-sdk';
+import multer from 'multer';
+import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
@@ -381,28 +381,28 @@ const BUCKET_NAME = 'fc5y-backend-test';
 
 const s3 = new AWS.S3({
   accessKeyId: ACCESS_KEY_ID,
-  secretAccessKey: SECRET_ACCESS_KEY
+  secretAccessKey: SECRET_ACCESS_KEY,
 });
 
-const uploadPromise = (...args : [any]) => {
+const uploadPromise = (...args: [any]) => {
   return new Promise((resolve, reject) => {
-    s3.upload(...args, (err : any, data : any) => {
+    s3.upload(...args, (err: any, data: any) => {
       if (err) reject(err);
       else resolve(data);
     });
   });
 };
 
-const uploadJPEG = async (key : any, buffer : any) => {
+const uploadJPEG = async (key: any, buffer: any) => {
   const params = {
     Bucket: BUCKET_NAME,
     Key: key,
     Body: buffer,
     ACL: 'public-read',
-    ContentType: 'image/jpeg'
+    ContentType: 'image/jpeg',
   };
 
-  const data : any = await uploadPromise(params);
+  const data: any = await uploadPromise(params);
   return data.Location;
 };
 
@@ -410,11 +410,11 @@ const avatarUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
     files: 1,
-    fileSize: 5242880 // 5MB
-  }
+    fileSize: 5242880, // 5MB
+  },
 }).single('avatar');
 
-async function sendUrl(req : any, res : any){
+async function sendUrl(req: any, res: any) {
   try {
     if (!req.file) {
       return res.redirect('/');
@@ -452,6 +452,6 @@ router.post('/update', updateMyInfo);
 router.post('/change-password', updateMyPassword);
 router.get('/participations', getMyParticipations);
 router.post('/participations/create', createMyParticipations);
-router.post('/change-avatar', avatarUpload, sendUrl)
+router.post('/change-avatar', avatarUpload, sendUrl);
 
 export default router;
