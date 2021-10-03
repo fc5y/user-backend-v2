@@ -1,6 +1,10 @@
 import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import bcrypt from 'bcryptjs';
+import AWS from "aws-sdk";
+import multer from "multer";
+import sharp from "sharp";
+import { v4 as uuidv4 } from 'uuid';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
 import { NextFunction, Request, Response, Router } from 'express';
@@ -370,11 +374,84 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
 
 //#endregion
 
+//#region POST /api/v2/me/change-avatar
+const ACCESS_KEY_ID = 'AKIA3YLYQO4TSD4FAWJS';
+const SECRET_ACCESS_KEY = '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';
+const BUCKET_NAME = 'fc5y-backend-test';
+
+const s3 = new AWS.S3({
+  accessKeyId: ACCESS_KEY_ID,
+  secretAccessKey: SECRET_ACCESS_KEY
+});
+
+const uploadPromise = (...args : [any]) => {
+  return new Promise((resolve, reject) => {
+    s3.upload(...args, (err : any, data : any) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+};
+
+const uploadJPEG = async (key : any, buffer : any) => {
+  const params = {
+    Bucket: BUCKET_NAME,
+    Key: key,
+    Body: buffer,
+    ACL: 'public-read',
+    ContentType: 'image/jpeg'
+  };
+
+  const data : any = await uploadPromise(params);
+  return data.Location;
+};
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    files: 1,
+    fileSize: 5242880 // 5MB
+  }
+}).single('avatar');
+
+async function sendUrl(req : any, res : any){
+  try {
+    if (!req.file) {
+      return res.redirect('/');
+    }
+
+    const x1 = parseInt(req.body.x1);
+    const y1 = parseInt(req.body.y1);
+    const x2 = parseInt(req.body.x2);
+    const y2 = parseInt(req.body.y2);
+
+    if (x2 - x1 !== y2 - y1) {
+      return res.send('invalid coords');
+    }
+
+    const buffer = await sharp(req.file.buffer)
+      .extract({ left: x1, top: y1, width: x2 - x1 + 1, height: y2 - y1 + 1 })
+      .resize(200, 200)
+      .jpeg({ mozjpeg: true })
+      .toBuffer();
+
+    const key = uuidv4() + '.jpg';
+    const url = await uploadJPEG(key, buffer);
+
+    res.send(`<a href="${url}">${url}</a>`);
+  } catch (err) {
+    console.error(err);
+    res.send('error');
+  }
+}
+//#endregion
+
 const router = Router();
 router.get('/', getMyInfo);
 router.post('/update', updateMyInfo);
 router.post('/change-password', updateMyPassword);
 router.get('/participations', getMyParticipations);
 router.post('/participations/create', createMyParticipations);
+router.post('/change-avatar', avatarUpload, sendUrl)
 
 export default router;
