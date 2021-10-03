@@ -375,13 +375,9 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
 //#endregion
 
 //#region POST /api/v2/me/change-avatar
-const ACCESS_KEY_ID = 'AKIA3YLYQO4TSD4FAWJS';
-const SECRET_ACCESS_KEY = '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';
-const BUCKET_NAME = 'fc5y-backend-test';
-
 const s3 = new AWS.S3({
-  accessKeyId: ACCESS_KEY_ID,
-  secretAccessKey: SECRET_ACCESS_KEY,
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
 });
 
 const uploadPromise = (...args: [any]) => {
@@ -395,7 +391,7 @@ const uploadPromise = (...args: [any]) => {
 
 const uploadJPEG = async (key: any, buffer: any) => {
   const params = {
-    Bucket: BUCKET_NAME,
+    Bucket: process.env.BUCKET_NAME,
     Key: key,
     Body: buffer,
     ACL: 'public-read',
