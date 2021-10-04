@@ -1,12 +1,13 @@
 import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
-import bcrypt from 'bcryptjs';
 import AWS from 'aws-sdk';
+import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
+import { ACCESS_KEY_ID, SECRET_ACCESS_KEY, AVATAR_BUCKET_NAME } from '../../utils/common-config';
 import { NextFunction, Request, Response, Router } from 'express';
 import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
 import { loadUser } from '../../utils/session-utils';
@@ -379,9 +380,10 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
 //#endregion
 
 //#region POST /api/v2/me/change-avatar
+
 const s3 = new AWS.S3({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  accessKeyId: ACCESS_KEY_ID,
+  secretAccessKey: SECRET_ACCESS_KEY,
 });
 
 const uploadPromise = (...args: [any]) => {
@@ -395,7 +397,7 @@ const uploadPromise = (...args: [any]) => {
 
 const uploadJPEG = async (key: any, buffer: any) => {
   const params = {
-    Bucket: process.env.BUCKET_NAME,
+    Bucket: AVATAR_BUCKET_NAME,
     Key: key,
     Body: buffer,
     ACL: 'public-read',
@@ -444,6 +446,7 @@ async function sendUrl(req: any, res: any) {
     res.send('error');
   }
 }
+
 //#endregion
 
 const router = Router();

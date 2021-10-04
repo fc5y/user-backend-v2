@@ -16,3 +16,6 @@ export const EMAIL_SERVICE_ORIGIN = process.env.EMAIL_SERVICE_ORIGIN || '';
 export const SHOW_DEBUG = process.env.SHOW_DEBUG === 'true';
 export const PRINT_EMAIL_TO_CONSOLE = process.env.PRINT_EMAIL_TO_CONSOLE === 'true';
 export const ADMIN_USERNAME_LIST = process.env.ADMIN_USERNAME_LIST || '';
+export const ACCESS_KEY_ID = process.env.ACCESS_KEY_ID || '';
+export const SECRET_ACCESS_KEY = process.env.SECRET_ACCESS_KEY || '';
+export const AVATAR_BUCKET_NAME = process.env.AVATAR_BUCKET_NAME || '';
