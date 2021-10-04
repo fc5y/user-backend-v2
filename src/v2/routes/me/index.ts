@@ -1,15 +1,14 @@
 import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
-import AWS from 'aws-sdk';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
-import { ACCESS_KEY_ID, SECRET_ACCESS_KEY, AVATAR_BUCKET_NAME } from '../../utils/common-config';
 import { NextFunction, Request, Response, Router } from 'express';
 import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
+import { uploadJPEG } from '../../utils/aws-s3';
 import { loadUser } from '../../utils/session-utils';
 import { assertPassword } from '../../utils/auth';
 
@@ -381,34 +380,6 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
 
 //#region POST /api/v2/me/change-avatar
 
-const s3 = new AWS.S3({
-  accessKeyId: ACCESS_KEY_ID,
-  secretAccessKey: SECRET_ACCESS_KEY,
-});
-
-const uploadPromise = (...args: [any]) => {
-  return new Promise((resolve, reject) => {
-    s3.upload(...args, (err: any, data: any) => {
-      if (err) reject(err);
-      else resolve(data);
-    });
-  });
-};
-
-const uploadJPEG = async (key: any, buffer: any) => {
-  const params = {
-    Bucket: AVATAR_BUCKET_NAME,
-    Key: key,
-    Body: buffer,
-    ACL: 'public-read',
-    ContentType: 'image/jpeg',
-  };
-
-  // FIXME: proper type annotation
-  const data: any = await uploadPromise(params);
-  return data.Location;
-};
-
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -442,15 +413,14 @@ async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
       });
     }
 
+    const key = uuidv4() + '.jpg';
     const buffer = await sharp(req.file.buffer)
       .extract({ left: x1, top: y1, width: x2 - x1 + 1, height: y2 - y1 + 1 })
       .resize(200, 200)
       .jpeg({ mozjpeg: true })
       .toBuffer();
 
-    const key = uuidv4() + '.jpg';
     const url = await uploadJPEG(key, buffer);
-
     res.json({
       error: 0,
       error_msg: 'Successfully changed avatar',
