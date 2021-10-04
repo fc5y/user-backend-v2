@@ -1,5 +1,5 @@
 import { fetchApi } from '../fetch-utils';
-import { EMAIL_SERVICE_ORIGIN, SENDER_EMAIL } from '../common-config';
+import { EMAIL_SERVICE_ORIGIN, SENDER_EMAIL, PRINT_EMAIL_TO_CONSOLE } from '../common-config';
 import { getUrl } from '../get-url';
 
 export const enum EMAIL_TEMPLATE_ID {
@@ -16,6 +16,18 @@ export type SendEmailParams = {
 };
 
 export async function sendEmail({ recipient_email, template_id, params }: SendEmailParams) {
+  const body = {
+    sender_email: SENDER_EMAIL,
+    recipient_email,
+    template_id,
+    params,
+  };
+
+  if (PRINT_EMAIL_TO_CONSOLE) {
+    console.debug(body);
+    return { error: 0, error_msg: 'Printed email to console' };
+  }
+
   const url = getUrl({
     origin: EMAIL_SERVICE_ORIGIN,
     pathname: '/email/v1/send',
@@ -23,12 +35,7 @@ export async function sendEmail({ recipient_email, template_id, params }: SendEm
   const { error, error_msg, data } = await fetchApi({
     method: 'POST',
     url,
-    body: {
-      sender_email: SENDER_EMAIL,
-      recipient_email,
-      template_id,
-      params,
-    },
+    body,
   });
   return { error, error_msg, data };
 }

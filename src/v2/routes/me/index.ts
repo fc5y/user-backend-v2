@@ -10,6 +10,7 @@ import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
 import { NextFunction, Request, Response, Router } from 'express';
 import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
 import { loadUser } from '../../utils/session-utils';
+import { assertPassword } from '../../utils/auth';
 
 //#region  GET /api/v2/me
 
@@ -192,7 +193,10 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
       });
     }
 
-    const { old_password, new_password } = assertWithSchema(req.body, updateMyPasswordParamsSchema);
+    const body = assertWithSchema(req.body, updateMyPasswordParamsSchema);
+    const new_password = assertPassword(body.new_password);
+    const old_password = body.old_password;
+
     const user = await getUserById(currentUser.user_id);
     const isValidPassword = await bcrypt.compare(old_password, user.password);
     if (isValidPassword) {
@@ -217,8 +221,8 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
       });
     } else {
       res.json({
-        error: ERROR_CODE.INVALID_PASSWORD,
-        error_msg: 'Invalid password',
+        error: ERROR_CODE.WRONG_OLD_PASSWORD,
+        error_msg: 'Wrong old password',
         data: null,
       });
     }
