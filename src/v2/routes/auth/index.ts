@@ -3,7 +3,7 @@ import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import * as otpManager from '../../utils/otp-manager';
 import * as jwtManager from '../../utils/jwt-manager';
-import { assertEmail, assertUsername, assertPassword } from './utils';
+import { assertEmail, assertUsername, assertPassword } from '../../utils/auth';
 import { assertWithSchema } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { JSONSchemaType } from 'ajv';
@@ -136,7 +136,6 @@ const requestSignupBodySchema: JSONSchemaType<RequestSignupBody> = {
 
 async function requestSignup(req: Request, res: Response, next: NextFunction) {
   try {
-    // TODO: check if username and email are used
     const body = assertWithSchema(req.body, requestSignupBodySchema);
     const email = assertEmail(body.email);
     const username = assertUsername(body.username);
@@ -163,6 +162,7 @@ async function requestSignup(req: Request, res: Response, next: NextFunction) {
         otp,
       },
     });
+
     if (error) {
       throw new GeneralError({
         error: ERROR_CODE.EMAIL_SERVICE_ERROR,
@@ -170,6 +170,7 @@ async function requestSignup(req: Request, res: Response, next: NextFunction) {
         data: { response: { error, error_msg, data } },
       });
     }
+
     res.json({
       error: 0,
       error_msg: 'OTP has been sent',
@@ -277,12 +278,11 @@ async function signup(req: Request, res: Response, next: NextFunction) {
     const body = assertWithSchema(req.body, signupBodySchema);
     const email = assertEmail(body.email);
     const username = assertUsername(body.username);
-    assertPassword(body.password);
+    const password = assertPassword(body.password);
 
     // 1. Verify JWT
     jwtManager.verifyJWTOrThrow(body.email, body.username, body.token);
-
-    // TODO: check if user exists
+    // 2. Check if user exists
     if ((await dbw.users.getUserOrUndefined({ username })) !== undefined) {
       throw new GeneralError({
         error: ERROR_CODE.USERNAME_EXISTED,
@@ -297,9 +297,9 @@ async function signup(req: Request, res: Response, next: NextFunction) {
         data: { email },
       });
     }
-    // 2. Create user
+    // 3. Create user
     const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(body.password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     await dbw.users.createUserOrThrow({
       username: body.username,
@@ -321,7 +321,6 @@ async function signup(req: Request, res: Response, next: NextFunction) {
     next(error);
   }
 }
-
 //#endregion
 
 const router = Router();
