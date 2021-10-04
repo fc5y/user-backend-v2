@@ -2,12 +2,18 @@ import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
-import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
 import { NextFunction, Request, Response, Router } from 'express';
-import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
+import {
+  generateContestPassword,
+  getContestById,
+  getContestIdByName,
+  getHashedPassword,
+  getUserById,
+  cropAvatar,
+} from './utils';
 import { uploadJPEG } from '../../utils/aws-s3';
 import { loadUser } from '../../utils/session-utils';
 import { assertPassword } from '../../utils/auth';
@@ -426,12 +432,7 @@ async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
     }
 
     const key = uuidv4() + '.jpg';
-    const buffer = await sharp(req.file.buffer)
-      .extract({ left: x1, top: y1, width: x2 - x1 + 1, height: y2 - y1 + 1 })
-      .resize(200, 200)
-      .jpeg({ mozjpeg: true })
-      .toBuffer();
-
+    const buffer = await cropAvatar(req.file.buffer, x1, y1, x2, y2);
     const url = await uploadJPEG(key, buffer);
     res.json({
       error: 0,
