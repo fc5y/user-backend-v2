@@ -380,6 +380,24 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
 
 //#region POST /api/v2/me/change-avatar
 
+type UpdateMyAvatarParams = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+
+const UpdateMyAvatarParamsSchema: JSONSchemaType<UpdateMyAvatarParams> = {
+  type: 'object',
+  required: ['x1', 'y1', 'x2', 'y2'],
+  properties: {
+    x1: { type: 'integer', minimum: 0 },
+    y1: { type: 'integer', minimum: 0 },
+    x2: { type: 'integer', minimum: 0 },
+    y2: { type: 'integer', minimum: 0 },
+  },
+};
+
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -391,7 +409,6 @@ const avatarUpload = multer({
 async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.file) {
-      // TODO: maybe use a different error code
       throw new GeneralError({
         error: ERROR_CODE.JSON_SCHEMA_VALIDATION_FAILED,
         error_msg: 'No file included in request body',
@@ -399,12 +416,7 @@ async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
       });
     }
 
-    // FIXME: properly parse request body
-    const x1 = parseInt(req.body.x1);
-    const y1 = parseInt(req.body.y1);
-    const x2 = parseInt(req.body.x2);
-    const y2 = parseInt(req.body.y2);
-
+    const { x1, y1, x2, y2 } = assertWithSchema(req.body, UpdateMyAvatarParamsSchema);
     if (x1 > x2 || y1 > y2 || x2 - x1 !== y2 - y1) {
       throw new GeneralError({
         error: ERROR_CODE.INVALID_AVATAR_COORDINATES,
