@@ -404,6 +404,7 @@ const uploadJPEG = async (key: any, buffer: any) => {
     ContentType: 'image/jpeg',
   };
 
+  // FIXME: proper type annotation
   const data: any = await uploadPromise(params);
   return data.Location;
 };
@@ -416,19 +417,29 @@ const avatarUpload = multer({
   },
 }).single('avatar');
 
-async function sendUrl(req: any, res: any) {
+async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.file) {
-      return res.redirect('/');
+      // TODO: maybe use a different error code
+      throw new GeneralError({
+        error: ERROR_CODE.JSON_SCHEMA_VALIDATION_FAILED,
+        error_msg: 'No file included in request body',
+        data: null,
+      });
     }
 
+    // FIXME: properly parse request body
     const x1 = parseInt(req.body.x1);
     const y1 = parseInt(req.body.y1);
     const x2 = parseInt(req.body.x2);
     const y2 = parseInt(req.body.y2);
 
-    if (x2 - x1 !== y2 - y1) {
-      return res.send('invalid coords');
+    if (x1 > x2 || y1 > y2 || x2 - x1 !== y2 - y1) {
+      throw new GeneralError({
+        error: ERROR_CODE.INVALID_AVATAR_COORDINATES,
+        error_msg: 'Cropped area must be a square',
+        data: null,
+      });
     }
 
     const buffer = await sharp(req.file.buffer)
@@ -440,10 +451,13 @@ async function sendUrl(req: any, res: any) {
     const key = uuidv4() + '.jpg';
     const url = await uploadJPEG(key, buffer);
 
-    res.send(`<a href="${url}">${url}</a>`);
-  } catch (err) {
-    console.error(err);
-    res.send('error');
+    res.json({
+      error: 0,
+      error_msg: 'Successfully changed avatar',
+      data: { url },
+    });
+  } catch (error) {
+    next(error);
   }
 }
 
@@ -455,6 +469,6 @@ router.post('/update', updateMyInfo);
 router.post('/change-password', updateMyPassword);
 router.get('/participations', getMyParticipations);
 router.post('/participations/create', createMyParticipations);
-router.post('/change-avatar', avatarUpload, sendUrl);
+router.post('/change-avatar', avatarUpload, updateMyAvatar);
 
 export default router;
