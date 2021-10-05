@@ -414,6 +414,16 @@ const avatarUpload = multer({
 
 async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
   try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     if (!req.file) {
       throw new GeneralError({
         error: ERROR_CODE.JSON_SCHEMA_VALIDATION_FAILED,
@@ -434,6 +444,21 @@ async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
     const key = uuidv4() + '.jpg';
     const buffer = await cropAvatar(req.file.buffer, x1, y1, x2, y2);
     const url = await uploadJPEG(key, buffer);
+    const { error, error_msg } = await db.users.updateUser({
+      where: {
+        user_id: currentUser.user_id,
+      },
+      values: {
+        avatar : url,
+      },
+    });
+    if (error) {
+      throw new GeneralError({
+        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+        error_msg: 'Received non-zero code from Database Gateway when getting users',
+        data: { response: { error, error_msg } },
+      });
+    }
     res.json({
       error: 0,
       error_msg: 'Successfully changed avatar',
