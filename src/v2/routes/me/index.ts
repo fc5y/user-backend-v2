@@ -449,13 +449,13 @@ async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
         user_id: currentUser.user_id,
       },
       values: {
-        avatar : url,
+        avatar: url,
       },
     });
     if (error) {
       throw new GeneralError({
         error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
-        error_msg: 'Received non-zero code from Database Gateway when getting users',
+        error_msg: 'Received non-zero code from Database Gateway when updating avatar',
         data: { response: { error, error_msg } },
       });
     }
