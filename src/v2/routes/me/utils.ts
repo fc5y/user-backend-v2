@@ -1,6 +1,7 @@
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import db from '../../utils/database-gateway';
 import bcrypt from 'bcryptjs';
+import sharp from 'sharp';
 
 export async function getContestById(contest_id: number) {
   const { error, error_msg, data } = await db.contests.getContests({
@@ -81,4 +82,12 @@ export async function getHashedPassword(password: string) {
 
 export function generateContestPassword() {
   return 'fc-' + String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+}
+
+export async function cropAvatar(buffer: Buffer, x1: number, y1: number, x2: number, y2: number) {
+  return await sharp(buffer)
+    .extract({ left: x1, top: y1, width: x2 - x1 + 1, height: y2 - y1 + 1 })
+    .resize(200, 200)
+    .jpeg({ mozjpeg: true })
+    .toBuffer();
 }
