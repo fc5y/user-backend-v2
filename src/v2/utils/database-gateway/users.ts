@@ -23,6 +23,7 @@ export type GetUsersData = {
     password: string;
     email: string;
     rating: number;
+    avatar: string;
   }>;
 };
 
@@ -44,6 +45,7 @@ const getUsersDataSchema: JSONSchemaType<GetUsersData> = {
           email: { type: 'string' },
           password: { type: 'string' },
           rating: { type: 'number', nullable: true },
+          avatar: { type: 'string', nullable: true },   // should there be a default avatar ?
         },
       },
     },

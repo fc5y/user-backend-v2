@@ -2,7 +2,7 @@ import db from '../../utils/database-gateway';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { NextFunction, Request, Response, Router } from 'express';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
-import { getUserIdByUsername, getContestByContestId } from './utils';
+import { getUserIdByUsername, getContestByContestId, formatUser } from './utils';
 import { getTotalParticipationsInContest } from '../../utils/cached-requests';
 
 // #region GET /api/v2/users/:username
@@ -13,7 +13,7 @@ type GetUserParams = {
 
 const getUserParamsSchema: JSONSchemaType<GetUserParams> = {
   type: 'object',
-  required: ['username'],
+  required: ['username', ],
   properties: {
     username: { type: 'string' },
   },
@@ -45,13 +45,8 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
       error: 0,
       error_msg: 'User',
       data: {
-        user: {
-          username: data.items[0].username,
-          full_name: data.items[0].full_name,
-          school_name: data.items[0].school_name,
-          rating: data.items[0].rating === undefined ? null : data.items[0].rating,
-        },
-      },
+        user: formatUser(data.items[0], true),
+      }
     };
     res.json(result);
   } catch (error) {

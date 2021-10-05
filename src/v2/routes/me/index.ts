@@ -17,6 +17,7 @@ import {
 import { uploadJPEG } from '../../utils/aws-s3';
 import { loadUser } from '../../utils/session-utils';
 import { assertPassword } from '../../utils/auth';
+import { formatUser } from '../users/utils';
 
 //#region  GET /api/v2/me
 
@@ -56,13 +57,7 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'Me',
       data: {
-        user: {
-          username: data.items[0].username,
-          full_name: data.items[0].full_name,
-          school_name: data.items[0].school_name,
-          email: data.items[0].email,
-          rating: data.items[0].rating,
-        },
+        user: formatUser(data.items[0], false),
       },
     };
     res.json(result);
@@ -78,14 +73,16 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
 type UpdateMyInfoParams = {
   full_name: string;
   school_name: string;
+  avatar: string;
 };
 
 const updateMyInfoParamsSchema: JSONSchemaType<UpdateMyInfoParams> = {
   type: 'object',
-  required: ['full_name', 'school_name'],
+  required: ['full_name', 'school_name', 'avatar'],
   properties: {
     full_name: { type: 'string' },
     school_name: { type: 'string' },
+    avatar: { type: 'string' },
   },
 };
 
@@ -105,7 +102,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
     const user_id = currentUser.user_id;
 
     // 2. Send update request
-    const { full_name, school_name } = assertWithSchema(req.body, updateMyInfoParamsSchema);
+    const { full_name, school_name, avatar } = assertWithSchema(req.body, updateMyInfoParamsSchema);
 
     const updateResponse = await db.users.updateUser({
       where: {
@@ -114,6 +111,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
       values: {
         full_name,
         school_name,
+        avatar,
       },
     });
 
@@ -155,13 +153,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'User updated',
       data: {
-        user: {
-          username: user.username,
-          full_name: user.full_name,
-          school_name: user.school_name,
-          email: user.email,
-          rating: user.rating,
-        },
+        user: formatUser(user, false),
       },
     });
   } catch (error) {
