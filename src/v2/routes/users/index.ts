@@ -13,7 +13,7 @@ type GetUserParams = {
 
 const getUserParamsSchema: JSONSchemaType<GetUserParams> = {
   type: 'object',
-  required: ['username', ],
+  required: ['username'],
   properties: {
     username: { type: 'string' },
   },
@@ -46,7 +46,7 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
       error_msg: 'User',
       data: {
         user: formatUser(data.items[0], true),
-      }
+      },
     };
     res.json(result);
   } catch (error) {
