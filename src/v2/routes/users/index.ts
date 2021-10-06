@@ -45,7 +45,7 @@ async function getUserByUsername(req: Request, res: Response, next: NextFunction
       error: 0,
       error_msg: 'User',
       data: {
-        user: formatUser(data.items[0], true),
+        user: formatUser(data.items[0], false),
       },
     };
     res.json(result);
