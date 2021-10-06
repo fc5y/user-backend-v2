@@ -45,7 +45,7 @@ const getUsersDataSchema: JSONSchemaType<GetUsersData> = {
           email: { type: 'string' },
           password: { type: 'string' },
           rating: { type: 'number', nullable: true },
-          avatar: { type: 'string', nullable: true }, // should there be a default avatar ?
+          avatar: { type: 'string', nullable: true },
         },
       },
     },
