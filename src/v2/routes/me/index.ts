@@ -57,7 +57,7 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'Me',
       data: {
-        user: formatUser(data.items[0], false),
+        user: formatUser(data.items[0]),
       },
     };
     res.json(result);
@@ -73,16 +73,14 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
 type UpdateMyInfoParams = {
   full_name: string;
   school_name: string;
-  avatar: string;
 };
 
 const updateMyInfoParamsSchema: JSONSchemaType<UpdateMyInfoParams> = {
   type: 'object',
-  required: ['full_name', 'school_name', 'avatar'],
+  required: ['full_name', 'school_name'],
   properties: {
     full_name: { type: 'string' },
     school_name: { type: 'string' },
-    avatar: { type: 'string' },
   },
 };
 
@@ -102,7 +100,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
     const user_id = currentUser.user_id;
 
     // 2. Send update request
-    const { full_name, school_name, avatar } = assertWithSchema(req.body, updateMyInfoParamsSchema);
+    const { full_name, school_name } = assertWithSchema(req.body, updateMyInfoParamsSchema);
 
     const updateResponse = await db.users.updateUser({
       where: {
@@ -111,7 +109,6 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
       values: {
         full_name,
         school_name,
-        avatar,
       },
     });
 
@@ -153,7 +150,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'User updated',
       data: {
-        user: formatUser(user, false),
+        user: formatUser(user),
       },
     });
   } catch (error) {
