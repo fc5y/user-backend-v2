@@ -1,5 +1,6 @@
 import db from '../../utils/database-gateway';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
+import { GetUsersData } from '../../utils/database-gateway/users';
 
 export async function getUserIdByUsername(username: string) {
   const { error, error_msg, data } = await db.users.getUsers({
@@ -38,4 +39,15 @@ export async function getContestByContestId(contest_id: number) {
     });
   }
   return { contest: data.items[0] };
+}
+
+export function formatUser(user: GetUsersData['items'][number], include_email: boolean = true) {
+  return {
+    username: user.username,
+    full_name: user.full_name,
+    school_name: user.school_name,
+    email: include_email ? user.email : undefined,
+    rating: user.rating,
+    avatar: user.avatar,
+  };
 }

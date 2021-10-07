@@ -17,6 +17,7 @@ import {
 import { uploadJPEG } from '../../utils/aws-s3';
 import { loadUser } from '../../utils/session-utils';
 import { assertPassword } from '../../utils/auth';
+import { formatUser } from '../users/utils';
 
 //#region  GET /api/v2/me
 
@@ -56,13 +57,7 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'Me',
       data: {
-        user: {
-          username: data.items[0].username,
-          full_name: data.items[0].full_name,
-          school_name: data.items[0].school_name,
-          email: data.items[0].email,
-          rating: data.items[0].rating,
-        },
+        user: formatUser(data.items[0]),
       },
     };
     res.json(result);
@@ -155,13 +150,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'User updated',
       data: {
-        user: {
-          username: user.username,
-          full_name: user.full_name,
-          school_name: user.school_name,
-          email: user.email,
-          rating: user.rating,
-        },
+        user: formatUser(user),
       },
     });
   } catch (error) {
