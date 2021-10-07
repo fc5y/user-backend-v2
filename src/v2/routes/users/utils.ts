@@ -46,7 +46,7 @@ export function formatUser(user: GetUsersData['items'][number], include_email: b
     username: user.username,
     full_name: user.full_name,
     school_name: user.school_name,
-    email: include_email ? user.email : null,
+    email: include_email ? user.email : undefined,
     rating: user.rating === undefined ? null : user.rating,
     avatar: user.avatar,
   };
