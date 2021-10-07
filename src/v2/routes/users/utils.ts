@@ -47,7 +47,7 @@ export function formatUser(user: GetUsersData['items'][number], include_email: b
     full_name: user.full_name,
     school_name: user.school_name,
     email: include_email ? user.email : undefined,
-    rating: user.rating === undefined ? null : user.rating,
+    rating: user.rating,
     avatar: user.avatar,
   };
 }
