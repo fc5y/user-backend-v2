@@ -297,6 +297,96 @@ async function signup(req: Request, res: Response, next: NextFunction) {
 
 //#endregion
 
+//#region POST /api/v2/auth/request-reset-password
+
+type RequestResetPasswordBody = {
+  email: string;
+};
+
+const requestResetPasswordBodySchema: JSONSchemaType<RequestResetPasswordBody> = {
+  type: 'object',
+  required: ['email'],
+  properties: {
+    email: { type: 'string' },
+  },
+};
+
+async function requestResetPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const body = assertWithSchema(req.body, requestResetPasswordBodySchema);
+    const email = assertEmail(body.email);
+    const username = null;
+    const otp = otpManager.createOtp(email, username);
+    const { error, error_msg, data } = await sendEmail({
+      recipient_email: email,
+      template_id: EMAIL_TEMPLATE_ID.RESET_PASSWORD_EMAIL_TEMPLATE_ID,
+      params: {
+        otp,
+      },
+    });
+    if (error) {
+      throw new GeneralError({
+        error: ERROR_CODE.EMAIL_SERVICE_ERROR,
+        error_msg: 'Received non-zero code from Email Service when sending OTP email',
+        data: {
+          response: {
+            error,
+            error_msg,
+            data,
+          },
+        },
+      });
+    }
+    res.json({
+      error: 0,
+      error_msg: 'OTP has been sent',
+      data: {
+        email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+//#endregion
+
+//#region POST /api/v2/auth/reset-password
+
+type ResetPassword = {
+  token: string;
+  email: string;
+  new_password: string;
+};
+
+const resetPasswordBodySchema: JSONSchemaType<ResetPassword> = {
+  type: 'object',
+  required: ['token', 'email', 'new_password'],
+  properties: {
+    token: { type: 'string' },
+    email: { type: 'string' },
+    new_password: { type: 'string' },
+  },
+};
+
+async function resetPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const body = assertWithSchema(req.body, resetPasswordBodySchema);
+    const email = assertEmail(body.email);
+    const username = null;
+    const new_password = assertPassword(body.new_password);
+
+    jwtManager.verifyJWTOrThrow(email, username, body.token);
+
+    // TODO: update password
+    const salt = await bcrypt.genSalt();
+  } catch (error) {
+    next(error);
+  }
+}
+
+//#endregion
+
 const router = Router();
 router.get('/login-status', loginStatus);
 router.post('/login', login);
@@ -304,4 +394,5 @@ router.post('/logout', logout);
 router.post('/request-signup', requestSignup);
 router.post('/verify-otp', verifyOtp);
 router.post('/signup', signup);
+router.post('/request-reset-password', requestResetPassword);
 export default router;
