@@ -315,12 +315,14 @@ async function requestResetPassword(req: Request, res: Response, next: NextFunct
   try {
     const body = assertWithSchema(req.body, requestResetPasswordBodySchema);
     const email = assertEmail(body.email);
-    const username = null;
+    const user = await dbw.users.getUserWithEmail(email);
+    const username = user.username;
     const otp = otpManager.createOtp(email, username);
     const { error, error_msg, data } = await sendEmail({
       recipient_email: email,
       template_id: EMAIL_TEMPLATE_ID.RESET_PASSWORD_EMAIL_TEMPLATE_ID,
       params: {
+        displayed_name: user.full_name,
         otp,
       },
     });
@@ -373,13 +375,27 @@ async function resetPassword(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, resetPasswordBodySchema);
     const email = assertEmail(body.email);
-    const username = null;
     const new_password = assertPassword(body.new_password);
+
+    const user = await dbw.users.getUserWithEmail(email);
+    const username = user.username;
+    const user_id = user.id;
 
     jwtManager.verifyJWTOrThrow(email, username, body.token);
 
-    // TODO: update password
     const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(new_password, salt);
+
+    await dbw.users.updateUserPasswordOrThrow(user_id, hashedPassword);
+
+    res.json({
+      error: 0,
+      error_msg: 'Successfully reset password',
+      data: {
+        email: email,
+        username: username,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -395,4 +411,5 @@ router.post('/request-signup', requestSignup);
 router.post('/verify-otp', verifyOtp);
 router.post('/signup', signup);
 router.post('/request-reset-password', requestResetPassword);
+router.post('/reset-password', resetPassword);
 export default router;
