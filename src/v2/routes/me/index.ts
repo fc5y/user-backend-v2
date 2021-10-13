@@ -1,11 +1,23 @@
 import db from '../../utils/database-gateway';
 import dbw from '../../utils/database-gateway-wrapper';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { GeneralError, ERROR_CODE } from '../../utils/common-errors';
 import { NextFunction, Request, Response, Router } from 'express';
-import { generateContestPassword, getContestById, getContestIdByName, getHashedPassword, getUserById } from './utils';
+import {
+  generateContestPassword,
+  getContestById,
+  getContestIdByName,
+  getHashedPassword,
+  getUserById,
+  cropAvatar,
+} from './utils';
+import { uploadJPEG } from '../../utils/aws-s3';
 import { loadUser } from '../../utils/session-utils';
+import { assertPassword } from '../../utils/auth';
+import { formatUser } from '../users/utils';
 
 //#region  GET /api/v2/me
 
@@ -45,13 +57,7 @@ async function getMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'Me',
       data: {
-        user: {
-          username: data.items[0].username,
-          full_name: data.items[0].full_name,
-          school_name: data.items[0].school_name,
-          email: data.items[0].email,
-          rating: data.items[0].rating,
-        },
+        user: formatUser(data.items[0]),
       },
     };
     res.json(result);
@@ -144,13 +150,7 @@ async function updateMyInfo(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'User updated',
       data: {
-        user: {
-          username: user.username,
-          full_name: user.full_name,
-          school_name: user.school_name,
-          email: user.email,
-          rating: user.rating,
-        },
+        user: formatUser(user),
       },
     });
   } catch (error) {
@@ -188,7 +188,10 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
       });
     }
 
-    const { old_password, new_password } = assertWithSchema(req.body, updateMyPasswordParamsSchema);
+    const body = assertWithSchema(req.body, updateMyPasswordParamsSchema);
+    const new_password = assertPassword(body.new_password);
+    const old_password = body.old_password;
+
     const user = await getUserById(currentUser.user_id);
     const isValidPassword = await bcrypt.compare(old_password, user.password);
     if (isValidPassword) {
@@ -213,8 +216,8 @@ async function updateMyPassword(req: Request, res: Response, next: NextFunction)
       });
     } else {
       res.json({
-        error: ERROR_CODE.INVALID_PASSWORD,
-        error_msg: 'Invalid password',
+        error: ERROR_CODE.WRONG_OLD_PASSWORD,
+        error_msg: 'Wrong old password',
         data: null,
       });
     }
@@ -370,11 +373,99 @@ async function createMyParticipations(req: Request, res: Response, next: NextFun
 
 //#endregion
 
+//#region POST /api/v2/me/change-avatar
+
+type UpdateMyAvatarParams = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+
+const UpdateMyAvatarParamsSchema: JSONSchemaType<UpdateMyAvatarParams> = {
+  type: 'object',
+  required: ['x1', 'y1', 'x2', 'y2'],
+  properties: {
+    x1: { type: 'integer', minimum: 0 },
+    y1: { type: 'integer', minimum: 0 },
+    x2: { type: 'integer', minimum: 0 },
+    y2: { type: 'integer', minimum: 0 },
+  },
+};
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    files: 1,
+    fileSize: 5242880, // 5MB
+  },
+}).single('avatar');
+
+async function updateMyAvatar(req: Request, res: Response, next: NextFunction) {
+  try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
+    if (!req.file) {
+      throw new GeneralError({
+        error: ERROR_CODE.JSON_SCHEMA_VALIDATION_FAILED,
+        error_msg: 'No file included in request body',
+        data: null,
+      });
+    }
+
+    const { x1, y1, x2, y2 } = assertWithSchema(req.body, UpdateMyAvatarParamsSchema);
+    if (x1 > x2 || y1 > y2 || x2 - x1 !== y2 - y1) {
+      throw new GeneralError({
+        error: ERROR_CODE.INVALID_AVATAR_COORDINATES,
+        error_msg: 'Cropped area must be a square',
+        data: null,
+      });
+    }
+
+    const key = uuidv4() + '.jpg';
+    const buffer = await cropAvatar(req.file.buffer, x1, y1, x2, y2);
+    const url = await uploadJPEG(key, buffer);
+    const { error, error_msg } = await db.users.updateUser({
+      where: {
+        user_id: currentUser.user_id,
+      },
+      values: {
+        avatar: url,
+      },
+    });
+    if (error) {
+      throw new GeneralError({
+        error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+        error_msg: 'Received non-zero code from Database Gateway when updating avatar',
+        data: { response: { error, error_msg } },
+      });
+    }
+    res.json({
+      error: 0,
+      error_msg: 'Successfully changed avatar',
+      data: { url },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+//#endregion
+
 const router = Router();
 router.get('/', getMyInfo);
 router.post('/update', updateMyInfo);
 router.post('/change-password', updateMyPassword);
 router.get('/participations', getMyParticipations);
 router.post('/participations/create', createMyParticipations);
+router.post('/change-avatar', avatarUpload, updateMyAvatar);
 
 export default router;
