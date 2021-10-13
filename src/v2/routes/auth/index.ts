@@ -157,7 +157,7 @@ async function requestSignup(req: Request, res: Response, next: NextFunction) {
     }
 
     const otp = otpManager.createOtp(email, username);
-    const { error, error_msg, data } = await sendEmail({
+    const sendResponse = await sendEmail({
       recipient_email: email,
       template_id: EMAIL_TEMPLATE_ID.SIGNUP_EMAIL_TEMPLATE_ID,
       params: {
@@ -166,11 +166,11 @@ async function requestSignup(req: Request, res: Response, next: NextFunction) {
       },
     });
 
-    if (error) {
+    if (sendResponse.error) {
       throw new GeneralError({
         error: ERROR_CODE.EMAIL_SERVICE_ERROR,
         error_msg: 'Received non-zero code from Email Service when sending OTP email',
-        data: { response: { error, error_msg, data } },
+        data: { response: sendResponse },
       });
     }
 
@@ -349,27 +349,21 @@ async function requestResetPassword(req: Request, res: Response, next: NextFunct
     const body = assertWithSchema(req.body, requestResetPasswordBodySchema);
     const email = assertEmail(body.email);
     const user = await dbw.users.getUserWithEmail(email);
-    const username = user.username;
-    const otp = otpManager.createOtp(email, username);
-    const { error, error_msg, data } = await sendEmail({
+    const otp = otpManager.createOtp(email, null);
+    const sendResponse = await sendEmail({
       recipient_email: email,
       template_id: EMAIL_TEMPLATE_ID.RESET_PASSWORD_EMAIL_TEMPLATE_ID,
       params: {
         displayed_name: user.full_name,
+        username: user.username,
         otp,
       },
     });
-    if (error) {
+    if (sendResponse.error) {
       throw new GeneralError({
         error: ERROR_CODE.EMAIL_SERVICE_ERROR,
         error_msg: 'Received non-zero code from Email Service when sending OTP email',
-        data: {
-          response: {
-            error,
-            error_msg,
-            data,
-          },
-        },
+        data: { response: sendResponse },
       });
     }
     res.json({
@@ -409,24 +403,20 @@ async function resetPassword(req: Request, res: Response, next: NextFunction) {
     const body = assertWithSchema(req.body, resetPasswordBodySchema);
     const email = assertEmail(body.email);
     const new_password = assertPassword(body.new_password);
+    jwtManager.verifyJWTOrThrow(email, null, body.token);
 
     const user = await dbw.users.getUserWithEmail(email);
-    const username = user.username;
-    const user_id = user.id;
-
-    jwtManager.verifyJWTOrThrow(email, username, body.token);
-
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(new_password, salt);
 
-    await dbw.users.updateUserPasswordOrThrow(user_id, hashedPassword);
+    await dbw.users.updateUserPasswordOrThrow(user.id, hashedPassword);
 
     res.json({
       error: 0,
       error_msg: 'Successfully reset password',
       data: {
-        email: email,
-        username: username,
+        email,
+        username: user.username,
       },
     });
   } catch (error) {
