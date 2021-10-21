@@ -333,29 +333,29 @@ async function signup(req: Request, res: Response, next: NextFunction) {
 //#region POST /api/v2/auth/request-change-email
 
 type RequestChangeEmailBody = {
-  email: string; 
-  new_email: string;  
+  username: string;
+  current_email: string;
 };
 
 const requestChangeEmailBodySchema: JSONSchemaType<RequestChangeEmailBody> = {
   type: 'object',
-  required: ['email', 'new_email'],
+  required: ['username', 'current_email'],
   properties: {
-    email: { type: 'string' },
-    new_email: { type: 'string' },
+    username: { type: 'string' },
+    current_email: { type: 'string' },
   },
 };
 
 async function requestChangeEmail(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, requestChangeEmailBodySchema);
-    const email = assertEmail(body.email);
-    const new_email = assertEmail(body.new_email);
-    const user = await dbw.users.getUserWithEmail(email);
-    const otp = otpManager.createOtp(new_email, null);
+    const username = assertEmail(body.username);
+    const current_email = assertEmail(body.current_email);
+    const user = await dbw.users.getUserOrThrow({username});
+    const otp = otpManager.createOtp(current_email, null);
     const sendResponse = await sendEmail({
-      recipient_email: new_email,
-      //# chưa cài change email email 
+      recipient_email: current_email,
+      //# chưa cài change email email
       template_id: EMAIL_TEMPLATE_ID.CHANGE_EMAIL_EMAIL_TEMPLATE_ID,
       params: {
         displayed_name: user.full_name,
@@ -374,7 +374,7 @@ async function requestChangeEmail(req: Request, res: Response, next: NextFunctio
       error: 0,
       error_msg: 'OTP has been sent',
       data: {
-        email,
+        current_email,
       },
     });
   } catch (error) {
@@ -388,16 +388,16 @@ async function requestChangeEmail(req: Request, res: Response, next: NextFunctio
 
 type ChangeEmail = {
   token: string;
-  email: string;
+  username: string;
   new_email: string;
 };
 
 const changeEmailBodySchema: JSONSchemaType<ChangeEmail> = {
   type: 'object',
-  required: ['token','email' ,'new_email'],
+  required: [ 'username', 'new_email', 'token'],
   properties: {
     token: { type: 'string' },
-    email: { type: 'string'},
+    username: { type: 'string' },
     new_email: { type: 'string' },
   },
 };
@@ -405,11 +405,11 @@ const changeEmailBodySchema: JSONSchemaType<ChangeEmail> = {
 async function changeEmail(req: Request, res: Response, next: NextFunction) {
   try {
     const body = assertWithSchema(req.body, changeEmailBodySchema);
-    const email = assertEmail(body.email);
+    const username = assertEmail(body.username);
     const new_email = assertEmail(body.new_email);
-    jwtManager.verifyJWTOrThrow(email, null, body.token);
+    jwtManager.verifyJWTOrThrow(new_email, null, body.token);
 
-    const user = await dbw.users.getUserWithEmail(email);
+    const user = await dbw.users.getUserOrThrow({username});
 
     await dbw.users.updateUserEmailOrThrow(user.id, new_email);
 
@@ -417,7 +417,7 @@ async function changeEmail(req: Request, res: Response, next: NextFunction) {
       error: 0,
       error_msg: 'Successfully change email',
       data: {
-        email,
+        new_email,
         username: user.username,
       },
     });
@@ -427,7 +427,6 @@ async function changeEmail(req: Request, res: Response, next: NextFunction) {
 }
 
 //#endregion
-
 
 //#region POST /api/v2/auth/request-reset-password
 
