@@ -43,6 +43,24 @@ export async function createUserOrThrow(params: {
   }
 }
 
+export async function updateUserEmailOrThrow(user_id: number, new_email: string) {
+  const updateResponse = await db.users.updateUser({
+    where: {
+      user_id: user_id,
+    },
+    values: {
+      email: new_email,
+    },
+  });
+  if (updateResponse.error) {
+    throw new GeneralError({
+      error: ERROR_CODE.DATABASE_GATEWAY_ERROR,
+      error_msg: 'Received non-zero code from Database Gateway when updating user email',
+      data: { response: updateResponse },
+    });
+  }
+}
+
 export async function updateUserPasswordOrThrow(user_id: number, new_password: string) {
   const updateResponse = await db.users.updateUser({
     where: {

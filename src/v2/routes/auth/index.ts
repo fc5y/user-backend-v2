@@ -330,6 +330,105 @@ async function signup(req: Request, res: Response, next: NextFunction) {
 
 //#endregion
 
+//#region POST /api/v2/auth/request-change-email
+
+type RequestChangeEmailBody = {
+  email: string; 
+  new_email: string;  
+};
+
+const requestChangeEmailBodySchema: JSONSchemaType<RequestChangeEmailBody> = {
+  type: 'object',
+  required: ['email', 'new_email'],
+  properties: {
+    email: { type: 'string' },
+    new_email: { type: 'string' },
+  },
+};
+
+async function requestChangeEmail(req: Request, res: Response, next: NextFunction) {
+  try {
+    const body = assertWithSchema(req.body, requestChangeEmailBodySchema);
+    const email = assertEmail(body.email);
+    const new_email = assertEmail(body.new_email);
+    const user = await dbw.users.getUserWithEmail(email);
+    const otp = otpManager.createOtp(new_email, null);
+    const sendResponse = await sendEmail({
+      recipient_email: new_email,
+      //# chưa cài change email email 
+      template_id: EMAIL_TEMPLATE_ID.CHANGE_EMAIL_EMAIL_TEMPLATE_ID,
+      params: {
+        displayed_name: user.full_name,
+        username: user.username,
+        otp,
+      },
+    });
+    if (sendResponse.error) {
+      throw new GeneralError({
+        error: ERROR_CODE.EMAIL_SERVICE_ERROR,
+        error_msg: 'Received non-zero code from Email Service when sending OTP email',
+        data: { response: sendResponse },
+      });
+    }
+    res.json({
+      error: 0,
+      error_msg: 'OTP has been sent',
+      data: {
+        email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+//#endregion
+
+//#region POST /api/v2/auth/change-email
+
+type ChangeEmail = {
+  token: string;
+  email: string;
+  new_email: string;
+};
+
+const changeEmailBodySchema: JSONSchemaType<ChangeEmail> = {
+  type: 'object',
+  required: ['token','email' ,'new_email'],
+  properties: {
+    token: { type: 'string' },
+    email: { type: 'string'},
+    new_email: { type: 'string' },
+  },
+};
+
+async function changeEmail(req: Request, res: Response, next: NextFunction) {
+  try {
+    const body = assertWithSchema(req.body, changeEmailBodySchema);
+    const email = assertEmail(body.email);
+    const new_email = assertEmail(body.new_email);
+    jwtManager.verifyJWTOrThrow(email, null, body.token);
+
+    const user = await dbw.users.getUserWithEmail(email);
+
+    await dbw.users.updateUserEmailOrThrow(user.id, new_email);
+
+    res.json({
+      error: 0,
+      error_msg: 'Successfully change email',
+      data: {
+        email,
+        username: user.username,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+//#endregion
+
+
 //#region POST /api/v2/auth/request-reset-password
 
 type RequestResetPasswordBody = {
@@ -433,6 +532,8 @@ router.post('/logout', logout);
 router.post('/request-signup', requestSignup);
 router.post('/verify-otp', verifyOtp);
 router.post('/signup', signup);
+router.post('/request-change-email', requestChangeEmail);
+router.post('/change-email', changeEmail);
 router.post('/request-reset-password', requestResetPassword);
 router.post('/reset-password', resetPassword);
 export default router;
