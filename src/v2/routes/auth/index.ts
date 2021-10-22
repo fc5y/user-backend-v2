@@ -427,7 +427,7 @@ async function changeEmail(req: Request, res: Response, next: NextFunction) {
 
     res.json({
       error: 0,
-      error_msg: 'Successfully change email',
+      error_msg: 'Successfully changed email',
       data: { new_email, username },
     });
   } catch (error) {
