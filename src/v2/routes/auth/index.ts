@@ -333,33 +333,41 @@ async function signup(req: Request, res: Response, next: NextFunction) {
 //#region POST /api/v2/auth/request-change-email
 
 type RequestChangeEmailBody = {
-  username: string;
-  current_email: string;
+  new_email: string;
 };
 
 const requestChangeEmailBodySchema: JSONSchemaType<RequestChangeEmailBody> = {
   type: 'object',
-  required: ['username', 'current_email'],
+  required: ['new_email'],
   properties: {
-    username: { type: 'string' },
-    current_email: { type: 'string' },
+    new_email: { type: 'string' },
   },
 };
 
 async function requestChangeEmail(req: Request, res: Response, next: NextFunction) {
   try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     const body = assertWithSchema(req.body, requestChangeEmailBodySchema);
-    const username = assertEmail(body.username);
-    const current_email = assertEmail(body.current_email);
-    const user = await dbw.users.getUserOrThrow({username});
-    const otp = otpManager.createOtp(current_email, null);
+    const new_email = assertEmail(body.new_email);
+    const username = currentUser.username;
+    const user = await dbw.users.getUserOrThrow({ username });
+    const otp = otpManager.createOtp(new_email, username);
     const sendResponse = await sendEmail({
-      recipient_email: current_email,
-      //# chưa cài change email email
+      recipient_email: new_email,
       template_id: EMAIL_TEMPLATE_ID.CHANGE_EMAIL_EMAIL_TEMPLATE_ID,
       params: {
         displayed_name: user.full_name,
-        username: user.username,
+        username,
+        new_email,
         otp,
       },
     });
@@ -373,9 +381,7 @@ async function requestChangeEmail(req: Request, res: Response, next: NextFunctio
     res.json({
       error: 0,
       error_msg: 'OTP has been sent',
-      data: {
-        current_email,
-      },
+      data: { new_email },
     });
   } catch (error) {
     next(error);
@@ -388,38 +394,41 @@ async function requestChangeEmail(req: Request, res: Response, next: NextFunctio
 
 type ChangeEmail = {
   token: string;
-  username: string;
   new_email: string;
 };
 
 const changeEmailBodySchema: JSONSchemaType<ChangeEmail> = {
   type: 'object',
-  required: [ 'username', 'new_email', 'token'],
+  required: ['new_email', 'token'],
   properties: {
     token: { type: 'string' },
-    username: { type: 'string' },
     new_email: { type: 'string' },
   },
 };
 
 async function changeEmail(req: Request, res: Response, next: NextFunction) {
   try {
+    const currentUser = loadUser(req);
+
+    if (!currentUser) {
+      throw new GeneralError({
+        error: ERROR_CODE.UNAUTHORIZED,
+        error_msg: 'User is not logged in',
+        data: null,
+      });
+    }
+
     const body = assertWithSchema(req.body, changeEmailBodySchema);
-    const username = assertEmail(body.username);
     const new_email = assertEmail(body.new_email);
-    jwtManager.verifyJWTOrThrow(new_email, null, body.token);
+    const username = currentUser.username;
+    jwtManager.verifyJWTOrThrow(new_email, username, body.token);
 
-    const user = await dbw.users.getUserOrThrow({username});
-
-    await dbw.users.updateUserEmailOrThrow(user.id, new_email);
+    await dbw.users.updateUserEmailOrThrow(currentUser.user_id, new_email);
 
     res.json({
       error: 0,
       error_msg: 'Successfully change email',
-      data: {
-        new_email,
-        username: user.username,
-      },
+      data: { new_email, username },
     });
   } catch (error) {
     next(error);
