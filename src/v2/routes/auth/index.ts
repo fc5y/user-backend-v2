@@ -381,7 +381,7 @@ async function requestChangeEmail(req: Request, res: Response, next: NextFunctio
     res.json({
       error: 0,
       error_msg: 'OTP has been sent',
-      data: { new_email },
+      data: { email: new_email },
     });
   } catch (error) {
     next(error);
