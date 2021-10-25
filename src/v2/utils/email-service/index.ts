@@ -5,6 +5,7 @@ import { getUrl } from '../get-url';
 export const enum EMAIL_TEMPLATE_ID {
   SIGNUP_EMAIL_TEMPLATE_ID = 10001,
   RESET_PASSWORD_EMAIL_TEMPLATE_ID = 10002,
+  CHANGE_EMAIL_EMAIL_TEMPLATE_ID = 10003,
 }
 
 // #region POST /email/v1/send
