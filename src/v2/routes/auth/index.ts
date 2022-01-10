@@ -430,6 +430,7 @@ async function changeEmail(req: Request, res: Response, next: NextFunction) {
     const body = assertWithSchema(req.body, changeEmailBodySchema);
     const new_email = assertEmail(body.new_email);
     const username = currentUser.username;
+    jwtManager.verifyJWTOrThrow(new_email, username, body.token);
 
     if ((await dbw.users.getUserOrUndefined({ email: new_email })) !== undefined) {
       throw new GeneralError({
@@ -438,8 +439,6 @@ async function changeEmail(req: Request, res: Response, next: NextFunction) {
         data: { new_email },
       });
     }
-
-    jwtManager.verifyJWTOrThrow(new_email, username, body.token);
 
     await dbw.users.updateUserEmailOrThrow(currentUser.user_id, new_email);
 
