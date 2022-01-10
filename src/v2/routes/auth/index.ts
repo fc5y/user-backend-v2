@@ -360,6 +360,15 @@ async function requestChangeEmail(req: Request, res: Response, next: NextFunctio
     const new_email = assertEmail(body.new_email);
     const username = currentUser.username;
     const user = await dbw.users.getUserOrThrow({ username });
+
+    if ((await dbw.users.getUserOrUndefined({ email: new_email })) !== undefined) {
+      throw new GeneralError({
+        error: ERROR_CODE.EMAIL_EXISTED,
+        error_msg: 'Email already existed',
+        data: { new_email },
+      });
+    }
+
     const otp = otpManager.createOtp(new_email, username);
     const sendResponse = await sendEmail({
       recipient_email: new_email,
@@ -422,6 +431,14 @@ async function changeEmail(req: Request, res: Response, next: NextFunction) {
     const new_email = assertEmail(body.new_email);
     const username = currentUser.username;
     jwtManager.verifyJWTOrThrow(new_email, username, body.token);
+
+    if ((await dbw.users.getUserOrUndefined({ email: new_email })) !== undefined) {
+      throw new GeneralError({
+        error: ERROR_CODE.EMAIL_EXISTED,
+        error_msg: 'Email already existed',
+        data: { new_email },
+      });
+    }
 
     await dbw.users.updateUserEmailOrThrow(currentUser.user_id, new_email);
 
