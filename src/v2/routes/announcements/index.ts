@@ -4,6 +4,7 @@ import { assertWithSchema, JSONSchemaType } from '../../utils/validation';
 import { ERROR_CODE, GeneralError } from '../../utils/common-errors';
 import { mustBeAdmin } from '../../utils/role-verification';
 import { getTotalAnnouncements } from './utils';
+import dbw from '../../utils/database-gateway-wrapper';
 
 // #region GET /api/v2/announcements
 
@@ -75,6 +76,13 @@ const createAnnouncementParamsSchema: JSONSchemaType<CreateAnnouncementParams> =
 async function createAnnouncement(req: Request, res: Response, next: NextFunction) {
   try {
     const { name, title, description } = assertWithSchema(req.body, createAnnouncementParamsSchema);
+    if ((await dbw.announcements.getAnnouncementOrUndefined(name)) !== undefined) {
+      throw new GeneralError({
+        error: ERROR_CODE.ANNOUNCEMENT_EXISTED,
+        error_msg: 'Announcement name already existed',
+        data: { name },
+      });
+    }
     const { error, error_msg, data } = await db.announcements.createAnnouncements({
       name: name,
       title: title,
