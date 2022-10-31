@@ -246,7 +246,7 @@ async function updateContest(req: Request, res: Response, next: NextFunction) {
         start_time: body.start_time,
         duration: body.duration,
         can_enter: body.can_enter,
-        materials: materialsToDatabaseFormat(body.materials),
+        materials: body.materials && materialsToDatabaseFormat(body.materials),
       },
     });
 
